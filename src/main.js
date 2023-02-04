@@ -4,3 +4,8 @@ import "bootstrap/dist/css/bootstrap.css";
 import axios from "axios";
 
 createApp(App).mount("#app");
+
+axios.defaults.baseURL =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://griffith3.fly.dev/";
