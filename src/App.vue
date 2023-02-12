@@ -3,11 +3,9 @@
     <div class="row">
       <div class="col-2"></div>
       <div class="col submission-column">
-        <form @submit.prevent="testQuery">
+        <form @submit.prevent="discogsQuery(query)">
           <div class="input-group mb-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Artist Search</span>
-            </div>
+            <span class="input-group-text">Artist Search</span>
             <input
               type="text"
               v-model="query"
@@ -15,9 +13,7 @@
               id="queryinput"
               placeholder="example: interpol"
             />
-            <div class="input-group-apend">
-              <button class="btn btn-primary" type="submit">Search!</button>
-            </div>
+            <button class="btn btn-primary" type="submit">Search!</button>
             <div
               class="file-upload__error mb-1"
               v-for="(error, index) in errors"
@@ -43,6 +39,11 @@
             id="inputGroupFileAddon04"
           >
             Upload CSV
+          </button>
+        </div>
+        <div>
+          <button class="btn btn-danger" type="button" @click="clearResults">
+            Clear Results
           </button>
         </div>
       </div>
@@ -78,7 +79,7 @@ import axios from "axios";
 
 export default {
   data: function () {
-    return { albums: [], query: "", errors: [] };
+    return { albums: [], query: "", errors: [], artists: [] };
   },
   methods: {
     handleFileChange(e) {
@@ -119,7 +120,7 @@ export default {
           console.log(results[0]);
           console.log(results[0].split(",")[0]);
           this.query = results[0].split(",")[0];
-          this.testQuery();
+          this.discogsQuery();
           // console.log(JSON.parse(e.target.result));
         };
 
@@ -146,29 +147,37 @@ export default {
         this.errors.push(`File type should be ${this.accept}`);
       }
     },
-    testQuery: function () {
-      axios
-        .get(
-          `https://api.discogs.com/database/search?type=master&artist=${this.query.replace(
-            /\s/g,
-            "+"
-          )}&format=album&token=vwbBWENsiqyNVUgWWlunGyTKRxXHVSHJNHosZUyj`,
-          {
-            // headers: {
-            //   "user-agent":
-            //     "FindMissingAlbums/1.0 +http://www.findyouralbums.com",
-            // },
-          }
-        )
-        .then((response) => {
-          this.albums = response.data.results.filter((release) =>
-            release.title.toLowerCase().includes(this.query.toLowerCase())
-          );
-          this.albums = this.albums.sort((a, b) => {
-            return parseInt(a.year) > parseInt(b.year) ? 1 : -1;
+    discogsQuery: function (artist) {
+      if (!this.artists.includes(artist)) {
+        this.artists.push(artist.toLowerCase());
+        axios
+          .get(
+            `https://api.discogs.com/database/search?type=master&artist=${artist.replace(
+              /\s/g,
+              "+"
+            )}&year>2008&format=album&token=vwbBWENsiqyNVUgWWlunGyTKRxXHVSHJNHosZUyj`
+          )
+          .then((response) => {
+            response.data.results.forEach((album) => {
+              this.albums.push(album);
+            });
+            // This was needed when I had to filter to match my query
+            // this.albums = response.data.results.filter((release) =>
+            //   release.title.toLowerCase().includes(this.query.toLowerCase())
+            // );
+            this.albums = this.albums.sort((a, b) => {
+              return a.title > b.title ? 1 : -1;
+            });
+            console.log(response);
+            if (artist === this.query) {
+              this.query = "";
+            }
           });
-          console.log(response);
-        });
+      }
+    },
+    clearResults: function () {
+      this.albums = [];
+      this.artists = [];
     },
   },
 };
