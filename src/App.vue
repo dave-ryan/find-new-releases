@@ -3,7 +3,7 @@
     <div class="row">
       <div class="col-2"></div>
       <div class="col submission-column">
-        <form @submit.prevent="discogsQuery(query)">
+        <form @submit.prevent="discogsQuery(query.toLowerCase())">
           <div class="input-group mb-3">
             <span class="input-group-text">Artist Search</span>
             <input
@@ -75,11 +75,11 @@
 
 <script>
 import axios from "axios";
-// import fs from "fs";
+import Papa from "papaparse";
 
 export default {
   data: function () {
-    return { albums: [], query: "", errors: [], artists: [] };
+    return { albums: [], query: "", errors: [], myCollection: [] };
   },
   methods: {
     handleFileChange(e) {
@@ -97,47 +97,15 @@ export default {
           isImage = ["jpg", "jpeg", "png", "gif"].includes(fileExtention);
         // Print to console
         console.log(fileSize, fileExtention, fileName, isImage);
-        console.log(file);
-        // fs.createReadStream(file)
-        //   .pipe(csvparser())
-        //   .on("data", function (data) {
-        //     try {
-        //       console.log("Name is: " + data.NAME);
-        //       console.log("Age is: " + data.AGE);
+        Papa.parse(file, {
+          skipEmptyLines: true,
 
-        //       //perform the operation
-        //     } catch (err) {
-        //       //error handler
-        //     }
-        //   })
-        //   .on("end", function () {
-        //     //some final operation
-        //   });
-        var reader = new FileReader();
-        reader.onload = (e) => {
-          var results = e.target.result.split(/\r?\n/);
-          console.log(results);
-          console.log(results[0]);
-          console.log(results[0].split(",")[0]);
-          this.query = results[0].split(",")[0];
-          this.discogsQuery();
-          // console.log(JSON.parse(e.target.result));
-        };
-
-        reader.readAsText(file);
-
-        // var reader = fs.createReadStream(file, {
-        //   flag: "a+",
-        //   encoding: "UTF-8",
-        //   start: 5,
-        //   end: 64,
-        //   highWaterMark: 16,
-        // });
-
-        // // Read and display the file data on console
-        // reader.on("data", function (chunk) {
-        //   console.log(chunk);
-        // });
+          complete: function (results) {
+            console.log("results", results);
+            this.myCollection = results.data;
+            console.log("string", JSON.stringify(results.data));
+          },
+        });
       }
     },
     isFileTypeValid(fileExtention) {
@@ -147,24 +115,28 @@ export default {
         this.errors.push(`File type should be ${this.accept}`);
       }
     },
+    duplicationCheck: function (artist) {
+      var s = JSON.stringify(this.myCollection);
+      if (s.indexOf(artist) != -1) {
+        return true;
+      } else {
+        return false;
+      }
+    },
     discogsQuery: function (artist) {
-      if (!this.artists.includes(artist)) {
-        this.artists.push(artist.toLowerCase());
+      if (!this.duplicationCheck(artist)) {
+        this.myCollection.push([artist, ""]);
         axios
           .get(
             `https://api.discogs.com/database/search?type=master&artist=${artist.replace(
               /\s/g,
               "+"
-            )}&year>2008&format=album&token=vwbBWENsiqyNVUgWWlunGyTKRxXHVSHJNHosZUyj`
+            )}&format=album&token=vwbBWENsiqyNVUgWWlunGyTKRxXHVSHJNHosZUyj`
           )
           .then((response) => {
             response.data.results.forEach((album) => {
               this.albums.push(album);
             });
-            // This was needed when I had to filter to match my query
-            // this.albums = response.data.results.filter((release) =>
-            //   release.title.toLowerCase().includes(this.query.toLowerCase())
-            // );
             this.albums = this.albums.sort((a, b) => {
               return a.title > b.title ? 1 : -1;
             });
@@ -177,7 +149,7 @@ export default {
     },
     clearResults: function () {
       this.albums = [];
-      this.artists = [];
+      this.myCollection = [];
     },
   },
 };
