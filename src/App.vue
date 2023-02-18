@@ -1,5 +1,5 @@
 <template>
-  <div class="">
+  <div class="container text-center mt-5">
     <div class="row">
       <div class="col-2"></div>
       <div class="col submission-column">
@@ -45,31 +45,70 @@
           <button class="btn btn-danger" type="button" @click="clearResults">
             Clear Results
           </button>
+          <div class="form-check form-switch">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="artcheckbox"
+              checked
+              v-model="displayAlbums"
+            />
+            <label class="form-check-label" for="artcheckbox"
+              >Display Album Art</label
+            >
+          </div>
         </div>
       </div>
       <div class="col-2"></div>
     </div>
 
-    <div v-for="album in albums" :key="album.id" class="mt-3">
-      {{ album.title }}, {{ album.year }}
-      <a
-        :href="'https://www.discogs.com/master/' + album.master_id"
-        target="_blank"
-      >
-        <img :src="album.thumb" alt="" />
-      </a>
-    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Artist</th>
+          <th scope="col">Album</th>
+          <th scope="col">Year</th>
+          <th scope="col" v-if="displayAlbums">Cover</th>
+        </tr>
+      </thead>
+      <tbody class="table-group-divider">
+        <template v-for="artist in downloadedArtists" :key="artist.artist">
+          <tr
+            v-for="album in artist.albums"
+            :key="album.id"
+            class="mt-3"
+            :class="{ collected: album.collected }"
+          >
+            <td v-if="album.title">
+              {{ album.title.split(" - ")[0] }}
+            </td>
+            <td v-if="album.title">
+              {{ album.title.split(" - ")[1] }}
+            </td>
+            <td>
+              {{ album.year }}
+            </td>
+            <td v-if="displayAlbums">
+              <a
+                :href="'https://www.discogs.com/master/' + album.master_id"
+                target="_blank"
+              >
+                <img :src="album.thumb" alt="" />
+              </a>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
   </div>
 </template>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+.collected {
+  color: gray;
+  font-weight: 200;
+  text-decoration: line-through;
 }
 </style>
 
@@ -79,7 +118,13 @@ import Papa from "papaparse";
 
 export default {
   data: function () {
-    return { albums: [], query: "", errors: [], myCollection: [] };
+    return {
+      downloadedArtists: [],
+      query: "",
+      errors: [],
+      uploadedAlbums: [],
+      displayAlbums: true,
+    };
   },
   methods: {
     handleFileChange(e) {
@@ -97,12 +142,16 @@ export default {
           isImage = ["jpg", "jpeg", "png", "gif"].includes(fileExtention);
         // Print to console
         console.log(fileSize, fileExtention, fileName, isImage);
+
         Papa.parse(file, {
           skipEmptyLines: true,
 
           complete: function (results) {
             console.log("results", results);
-            this.myCollection = results.data;
+            this.uploadedAlbums = results.data;
+            this.uploadedAlbums.map((album) => {
+              album.collected = true;
+            });
             console.log("string", JSON.stringify(results.data));
           },
         });
@@ -116,7 +165,7 @@ export default {
       }
     },
     duplicationCheck: function (artist) {
-      var s = JSON.stringify(this.myCollection);
+      var s = JSON.stringify(this.uploadedAlbums);
       if (s.indexOf(artist) != -1) {
         return true;
       } else {
@@ -125,7 +174,7 @@ export default {
     },
     discogsQuery: function (artist) {
       if (!this.duplicationCheck(artist)) {
-        this.myCollection.push([artist, ""]);
+        this.uploadedAlbums.push([artist, ""]);
         axios
           .get(
             `https://api.discogs.com/database/search?type=master&artist=${artist.replace(
@@ -134,13 +183,19 @@ export default {
             )}&format=album&token=vwbBWENsiqyNVUgWWlunGyTKRxXHVSHJNHosZUyj`
           )
           .then((response) => {
-            response.data.results.forEach((album) => {
-              this.albums.push(album);
-            });
-            this.albums = this.albums.sort((a, b) => {
-              return a.title > b.title ? 1 : -1;
-            });
             console.log(response);
+
+            var sortedAlbums = response.data.results.sort((a, b) => {
+              return a.year > b.year ? 1 : -1;
+            });
+            var newArtist = {
+              artist: artist,
+              albums: sortedAlbums,
+            };
+            this.downloadedArtists.push(newArtist);
+            this.downloadedArtists = this.downloadedArtists.sort((a, b) => {
+              return a.artist > b.artist ? 1 : -1;
+            });
             if (artist === this.query) {
               this.query = "";
             }
@@ -148,8 +203,8 @@ export default {
       }
     },
     clearResults: function () {
-      this.albums = [];
-      this.myCollection = [];
+      this.downloadedArtists = [];
+      this.uploadedAlbums = [];
     },
   },
 };
