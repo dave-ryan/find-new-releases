@@ -37,8 +37,10 @@
             class="btn btn-outline-primary"
             type="submit"
             id="inputGroupFileAddon04"
+            v-if="readyToDownloadInfo"
+            @click="downloadEngine()"
           >
-            Upload CSV
+            Find New Releases
           </button>
         </div>
         <div>
@@ -46,6 +48,9 @@
             Clear Results
           </button>
           <div class="form-check form-switch">
+            <label class="form-check-label" for="artcheckbox"
+              >Display Album Art</label
+            >
             <input
               class="form-check-input"
               type="checkbox"
@@ -54,10 +59,11 @@
               checked
               v-model="displayAlbums"
             />
-            <label class="form-check-label" for="artcheckbox"
-              >Display Album Art</label
-            >
           </div>
+        </div>
+        <div>{{ queryCount }}.</div>
+        <div v-for="error in errors" :key="error">
+          {{ error }}
         </div>
       </div>
       <div class="col-2"></div>
@@ -119,11 +125,14 @@ import Papa from "papaparse";
 export default {
   data: function () {
     return {
-      downloadedArtists: [],
       query: "",
       errors: [],
+      downloadedArtists: [],
+      searchedArtists: [],
       uploadedAlbums: [],
       displayAlbums: true,
+      readyToDownloadInfo: false,
+      queryCount: 0,
     };
   },
   methods: {
@@ -147,13 +156,17 @@ export default {
           skipEmptyLines: true,
 
           complete: function (results) {
-            console.log("results", results);
+            // console.log("results", results);
+            // this.uploadedAlbums.map((album) => {
+            //   album.collected = true;
+            // });
+
             this.uploadedAlbums = results.data;
-            this.uploadedAlbums.map((album) => {
-              album.collected = true;
-            });
-            console.log("string", JSON.stringify(results.data));
-          },
+            this.readyToDownloadInfo = true;
+
+            // console.log("string", JSON.stringify(results.data));
+            // this.downloadEngine(results.data);
+          }.bind(this),
         });
       }
     },
@@ -165,16 +178,22 @@ export default {
       }
     },
     duplicationCheck: function (artist) {
-      var s = JSON.stringify(this.uploadedAlbums);
+      var s = JSON.stringify(this.searchedArtists);
       if (s.indexOf(artist) != -1) {
         return true;
       } else {
         return false;
       }
     },
+    downloadEngine: function () {
+      this.uploadedAlbums.forEach((row) => {
+        this.discogsQuery(row[0]);
+      });
+    },
     discogsQuery: function (artist) {
       if (!this.duplicationCheck(artist)) {
-        this.uploadedAlbums.push([artist, ""]);
+        this.searchedArtists.push([artist, ""]);
+        console.log(`downloading info on ${artist} `);
         axios
           .get(
             `https://api.discogs.com/database/search?type=master&artist=${artist.replace(
@@ -183,11 +202,33 @@ export default {
             )}&format=album&token=vwbBWENsiqyNVUgWWlunGyTKRxXHVSHJNHosZUyj`
           )
           .then((response) => {
-            console.log(response);
+            console.log("discogs response", response);
+            this.queryCount += 1;
 
-            var sortedAlbums = response.data.results.sort((a, b) => {
+            if (response.data.length === 0) {
+              this.errors.push(`Unable to find ${artist}!`);
+              return;
+            }
+
+            var selectedAlbums = response.data.results.filter((album) => {
+              if (
+                album.title.split(" - ")[0].toLowerCase() ===
+                artist.toLowerCase()
+              ) {
+                return album;
+              } else {
+                console.log(
+                  album.title.split(" - ")[0].toLowerCase(),
+                  artist,
+                  "HUH?"
+                );
+              }
+            });
+
+            var sortedAlbums = selectedAlbums.sort((a, b) => {
               return a.year > b.year ? 1 : -1;
             });
+
             var newArtist = {
               artist: artist,
               albums: sortedAlbums,
@@ -199,6 +240,10 @@ export default {
             if (artist === this.query) {
               this.query = "";
             }
+          })
+          .catch((errors) => {
+            console.log(errors);
+            console.log("ERROR!!", this.queryCount);
           });
       }
     },
