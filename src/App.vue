@@ -4,7 +4,7 @@
       <div class="col-2"></div>
       <div class="col submission-column">
         <div class="row">
-          <div class="col-12">
+          <div class="col-8">
             <form @submit.prevent="discogsQuery(query.toLowerCase())">
               <div class="input-group mb-3">
                 <span class="input-group-text">Artist Search</span>
@@ -18,6 +18,11 @@
                 <button class="btn btn-primary" type="submit">Search!</button>
               </div>
             </form>
+          </div>
+          <div class="col">
+            <button class="btn btn-danger" type="button" @click="clearResults">
+              Clear Results
+            </button>
           </div>
           <div class="col-12">
             <div class="input-group mb-3">
@@ -42,11 +47,6 @@
           </div>
         </div>
         <div class="row">
-          <div class="col">
-            <button class="btn btn-danger" type="button" @click="clearResults">
-              Clear Results
-            </button>
-          </div>
           <div class="col">
             <div class="form-check form-switch">
               <label class="form-check-label" for="artcheckbox"
@@ -77,8 +77,20 @@
             </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col">
+        <div class="row bg-light font-monospace" v-if="logs.length > 0">
+          <div class="col-12">Log:</div>
+          <div class="col-12">
+            <div v-for="(log, index) in logs" :key="index">
+              {{ log }}
+            </div>
+          </div>
+        </div>
+        <div
+          class="row bg-dark text-danger font-monospace"
+          v-if="errors.length > 0"
+        >
+          <div class="col-12">Errors:</div>
+          <div class="col-12">
             <div v-for="(error, index) in errors" :key="index">
               {{ error }}
             </div>
@@ -149,6 +161,7 @@ export default {
     return {
       query: "",
       errors: [],
+      logs: [],
       downloadedArtists: [],
       searchedArtists: [],
       uploadedAlbums: [],
@@ -232,7 +245,8 @@ export default {
     discogsQuery: function (artist) {
       if (!this.duplicationCheck(artist)) {
         this.searchedArtists.push([artist, ""]);
-        console.log(`downloading info on ${artist}...`);
+        // console.log(`downloading info on ${artist}...`);
+        this.logs.push(`downloading info on ${artist}...`);
 
         var self = this;
         setTimeout(function () {
