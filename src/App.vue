@@ -60,11 +60,20 @@
               v-model="displayAlbums"
             />
           </div>
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1"
+              >Only display albums released since:</span
+            >
+            <input
+              v-model="filteredYear"
+              type="number"
+              class="form-control"
+              aria-label="Year"
+              aria-describedby="basic-addon1"
+            />
+          </div>
         </div>
-        <div>{{ queryCount }}.</div>
-        <div v-for="error in errors" :key="error">
-          {{ error }}
-        </div>
+        <div v-for="(error, index) in errors" :key="index">{{ error }}??</div>
       </div>
       <div class="col-2"></div>
     </div>
@@ -75,13 +84,15 @@
           <th scope="col">Artist</th>
           <th scope="col">Album</th>
           <th scope="col">Year</th>
+          <th scope="col">Id</th>
+
           <th scope="col" v-if="displayAlbums">Cover</th>
         </tr>
       </thead>
       <tbody class="table-group-divider">
-        <template v-for="artist in downloadedArtists" :key="artist.artist">
+        <template v-for="artist in computedFiltered" :key="artist.artist">
           <tr
-            v-for="album in artist.albums"
+            v-for="album in artist"
             :key="album.id"
             class="mt-3"
             :class="{ collected: album.collected }"
@@ -95,6 +106,7 @@
             <td>
               {{ album.year }}
             </td>
+            <td>{{ album.id }}</td>
             <td v-if="displayAlbums">
               <a
                 :href="'https://www.discogs.com/master/' + album.master_id"
@@ -133,7 +145,17 @@ export default {
       displayAlbums: true,
       readyToDownloadInfo: false,
       queryCount: 0,
+      filteredYear: 1900,
     };
+  },
+  computed: {
+    computedFiltered() {
+      return this.downloadedArtists.map((artist) => {
+        return artist.albums.filter((album) => {
+          return album.year >= this.filteredYear;
+        });
+      });
+    },
   },
   methods: {
     handleFileChange(e) {
@@ -186,14 +208,28 @@ export default {
       }
     },
     downloadEngine: function () {
-      this.uploadedAlbums.forEach((row) => {
-        this.discogsQuery(row[0]);
-      });
+      if (this.queryCount < this.uploadedAlbums.length) {
+        console.log(this.queryCount, this.uploadedAlbums.length);
+        this.discogsQuery(this.uploadedAlbums[this.queryCount][0]);
+        this.queryCount += 1;
+      } else {
+        console.log("no more albums to search", this.uploadedAlbums);
+      }
+      // this.uploadedAlbums.forEach((row) => {
+      //   this.discogsQuery(row[0]);
+      // });
     },
     discogsQuery: function (artist) {
       if (!this.duplicationCheck(artist)) {
         this.searchedArtists.push([artist, ""]);
-        console.log(`downloading info on ${artist} `);
+        console.log(`downloading info on ${artist}...`);
+
+        var self = this;
+        setTimeout(function () {
+          // console.log("Executed after 1 second");
+          self.downloadEngine();
+        }, 1000);
+
         axios
           .get(
             `https://api.discogs.com/database/search?type=master&artist=${artist.replace(
@@ -202,10 +238,10 @@ export default {
             )}&format=album&token=vwbBWENsiqyNVUgWWlunGyTKRxXHVSHJNHosZUyj`
           )
           .then((response) => {
-            console.log("discogs response", response);
-            this.queryCount += 1;
+            // console.log("discogs response", response);
+            // this.queryCount += 1;
 
-            if (response.data.length === 0) {
+            if (response.data.results.length === 0) {
               this.errors.push(`Unable to find ${artist}!`);
               return;
             }
@@ -216,12 +252,6 @@ export default {
                 artist.toLowerCase()
               ) {
                 return album;
-              } else {
-                console.log(
-                  album.title.split(" - ")[0].toLowerCase(),
-                  artist,
-                  "HUH?"
-                );
               }
             });
 
@@ -242,9 +272,17 @@ export default {
             }
           })
           .catch((errors) => {
-            console.log(errors);
-            console.log("ERROR!!", this.queryCount);
+            console.log("error!", errors);
+            // console.log("ERROR!!", this.queryCount);
+            // this.downloadEngine;
           });
+      } else {
+        console.log("dupe detected, and ignored");
+        self = this;
+        setTimeout(function () {
+          // console.log("Executed after 1 second");
+          self.downloadEngine();
+        }, 200);
       }
     },
     clearResults: function () {
