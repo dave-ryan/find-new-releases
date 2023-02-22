@@ -3,77 +3,87 @@
     <div class="row">
       <div class="col-2"></div>
       <div class="col submission-column">
-        <form @submit.prevent="discogsQuery(query.toLowerCase())">
-          <div class="input-group mb-3">
-            <span class="input-group-text">Artist Search</span>
-            <input
-              type="text"
-              v-model="query"
-              class="form-control"
-              id="queryinput"
-              placeholder="example: interpol"
-            />
-            <button class="btn btn-primary" type="submit">Search!</button>
-            <div
-              class="file-upload__error mb-1"
-              v-for="(error, index) in errors"
-              :key="index"
-            >
-              <span>{{ error }}</span>
+        <div class="row">
+          <div class="col-12">
+            <form @submit.prevent="discogsQuery(query.toLowerCase())">
+              <div class="input-group mb-3">
+                <span class="input-group-text">Artist Search</span>
+                <input
+                  type="text"
+                  v-model="query"
+                  class="form-control"
+                  id="queryinput"
+                  placeholder="example: interpol"
+                />
+                <button class="btn btn-primary" type="submit">Search!</button>
+              </div>
+            </form>
+          </div>
+          <div class="col-12">
+            <div class="input-group mb-3">
+              <input
+                type="file"
+                class="form-control"
+                id="inputGroupFile04"
+                aria-describedby="inputGroupFileAddon04"
+                aria-label="Upload"
+                @change="handleFileChange($event)"
+              />
+              <button
+                class="btn btn-outline-primary"
+                type="submit"
+                id="inputGroupFileAddon04"
+                v-if="readyToDownloadInfo"
+                @click="downloadEngine()"
+              >
+                Find New Releases
+              </button>
             </div>
           </div>
-        </form>
-
-        <div class="input-group mb-3">
-          <input
-            type="file"
-            class="form-control"
-            id="inputGroupFile04"
-            aria-describedby="inputGroupFileAddon04"
-            aria-label="Upload"
-            @change="handleFileChange($event)"
-          />
-          <button
-            class="btn btn-outline-primary"
-            type="submit"
-            id="inputGroupFileAddon04"
-            v-if="readyToDownloadInfo"
-            @click="downloadEngine()"
-          >
-            Find New Releases
-          </button>
         </div>
-        <div>
-          <button class="btn btn-danger" type="button" @click="clearResults">
-            Clear Results
-          </button>
-          <div class="form-check form-switch">
-            <label class="form-check-label" for="artcheckbox"
-              >Display Album Art</label
-            >
-            <input
-              class="form-check-input"
-              type="checkbox"
-              role="switch"
-              id="artcheckbox"
-              checked
-              v-model="displayAlbums"
-            />
+        <div class="row">
+          <div class="col">
+            <button class="btn btn-danger" type="button" @click="clearResults">
+              Clear Results
+            </button>
           </div>
-          <div class="input-group mb-3">
-            <span class="input-group-text" id="basic-addon1"
-              >Only display albums released since:</span
-            >
-            <input
-              v-model="filteredYear"
-              type="number"
-              class="form-control"
-              aria-label="Year"
-              aria-describedby="basic-addon1"
-            />
+          <div class="col">
+            <div class="form-check form-switch">
+              <label class="form-check-label" for="artcheckbox"
+                >Display Album Art</label
+              >
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="artcheckbox"
+                checked
+                v-model="displayAlbums"
+              />
+            </div>
+          </div>
+          <div class="col">
+            <div class="input-group mb-3">
+              <span class="input-group-text" id="basic-addon1"
+                >Only display albums released since:</span
+              >
+              <input
+                v-model="filteredYear"
+                type="number"
+                class="form-control"
+                aria-label="Year"
+                aria-describedby="basic-addon1"
+              />
+            </div>
           </div>
         </div>
-        <div v-for="(error, index) in errors" :key="index">{{ error }}??</div>
+        <div class="row">
+          <div class="col">
+            <div v-for="(error, index) in errors" :key="index">
+              {{ error }}
+            </div>
+          </div>
+        </div>
       </div>
       <div class="col-2"></div>
     </div>
@@ -242,7 +252,7 @@ export default {
             // this.queryCount += 1;
 
             if (response.data.results.length === 0) {
-              this.errors.push(`Unable to find ${artist}!`);
+              this.errors.push(`Unable to find ${artist}`);
               return;
             }
 
