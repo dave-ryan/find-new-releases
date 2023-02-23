@@ -3,39 +3,20 @@
     <div class="row">
       <div class="col-2"></div>
       <div class="col submission-column">
-        <div class="row">
-          <div class="col-8">
-            <form @submit.prevent="discogsQuery(query.toLowerCase())">
-              <div class="input-group mb-3">
-                <span class="input-group-text">Artist Search</span>
-                <input
-                  type="text"
-                  v-model="query"
-                  class="form-control"
-                  id="queryinput"
-                  placeholder="example: interpol"
-                />
-                <button class="btn btn-primary" type="submit">Search!</button>
-              </div>
-            </form>
-          </div>
-          <div class="col">
-            <button class="btn btn-danger" type="button" @click="clearResults">
-              Clear Results
-            </button>
-          </div>
+        <div class="row mb-5">
           <div class="col-12">
-            <div class="input-group mb-3">
+            <h2>Upload a .csv file to see what albums you've been missing</h2>
+            <div class="input-group">
               <input
                 type="file"
-                class="form-control"
+                class="form-control fw-bold"
                 id="inputGroupFile04"
                 aria-describedby="inputGroupFileAddon04"
                 aria-label="Upload"
                 @change="handleFileChange($event)"
               />
               <button
-                class="btn btn-outline-primary"
+                class="btn btn-outline-primary fw-bold"
                 type="submit"
                 id="inputGroupFileAddon04"
                 v-if="readyToDownloadInfo"
@@ -48,7 +29,7 @@
         </div>
         <div class="row">
           <div class="col">
-            <div class="form-check form-switch text-start">
+            <div class="form-check form-switch form-check-inline">
               <label class="form-check-label" for="albumcheckbox"
                 >Display Album Art</label
               >
@@ -63,7 +44,7 @@
             </div>
           </div>
           <div class="col">
-            <div class="form-check form-switch text-start">
+            <div class="form-check form-switch form-check-inline">
               <label class="form-check-label" for="collectedcheckbox"
                 >Display Collected Albums</label
               >
@@ -78,11 +59,11 @@
             </div>
           </div>
         </div>
-        <div class="row">
+        <div class="row mb-5">
           <div class="col">
-            <div class="input-group mb-3">
+            <div class="input-group">
               <span class="input-group-text" id="basic-addon1"
-                >Only display albums released since:</span
+                >Only Display Albums Released Since</span
               >
               <input
                 v-model="filteredYear"
@@ -94,7 +75,26 @@
             </div>
           </div>
         </div>
-        <div class="row bg-light font-monospace" v-if="logs.length > 0">
+        <div class="row mb-3">
+          <div class="col">
+            <form @submit.prevent="discogsQuery(query.toLowerCase())">
+              <div class="input-group">
+                <span class="input-group-text">Individual Artist Search</span>
+                <input
+                  type="text"
+                  v-model="query"
+                  class="form-control"
+                  id="queryinput"
+                  placeholder="example: interpol"
+                />
+                <button class="btn btn-outline-primary" type="submit">
+                  Search!
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="row bg-light font-monospace mb-3" v-if="logs.length > 0">
           <div class="col-12">Log:</div>
           <div
             class="col-12 overflow-scroll"
@@ -107,7 +107,7 @@
           </div>
         </div>
         <div
-          class="row bg-dark text-danger font-monospace"
+          class="row bg-dark text-danger font-monospace mb-3"
           v-if="errors.length > 0"
         >
           <div class="col-12">Errors:</div>
@@ -124,47 +124,57 @@
       </div>
       <div class="col-2"></div>
     </div>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Artist</th>
-          <th scope="col">Album</th>
-          <th scope="col">Year</th>
-          <th scope="col">Id</th>
-          <th scope="col" v-if="displayAlbums">Cover</th>
-        </tr>
-      </thead>
-      <tbody class="table-group-divider">
-        <template v-for="artist in computedFiltered" :key="artist.artist">
-          <tr
-            v-for="album in artist"
-            :key="album.id"
-            class="mt-3"
-            :class="{ collected: album.collected }"
-          >
-            <td v-if="album.title">
-              {{ album.title.split(" - ")[0] }}
-            </td>
-            <td v-if="album.title">
-              {{ album.title.split(" - ")[1] }}
-            </td>
-            <td>
-              {{ album.year }}
-            </td>
-            <td>{{ album.id }}</td>
-            <td v-if="displayAlbums">
-              <a
-                :href="'https://www.discogs.com/master/' + album.master_id"
-                target="_blank"
+    <div class="row">
+      <div class="col">
+        <button class="btn btn-danger" type="button" @click="clearResults">
+          Clear Results
+        </button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Artist</th>
+              <th scope="col">Album</th>
+              <th scope="col">Year</th>
+              <th scope="col">Id</th>
+              <th scope="col" v-if="displayAlbums">Cover</th>
+            </tr>
+          </thead>
+          <tbody class="table-group-divider">
+            <template v-for="artist in computedFiltered" :key="artist.artist">
+              <tr
+                v-for="album in artist"
+                :key="album.id"
+                class="mt-3"
+                :class="{ collected: album.collected }"
               >
-                <img :src="album.thumb" alt="" />
-              </a>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+                <td v-if="album.title">
+                  {{ album.title.split(" - ")[0] }}
+                </td>
+                <td v-if="album.title">
+                  {{ album.title.split(" - ")[1] }}
+                </td>
+                <td>
+                  {{ album.year }}
+                </td>
+                <td>{{ album.id }}</td>
+                <td v-if="displayAlbums">
+                  <a
+                    :href="'https://www.discogs.com/master/' + album.master_id"
+                    target="_blank"
+                  >
+                    <img :src="album.thumb" alt="" />
+                  </a>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -307,8 +317,11 @@ export default {
 
             if (response.data.results.length === 0) {
               this.errors.push(`Unable to find ${artist}`);
-              this.errorsDiv = document.getElementById("errors-div");
-              this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
+              if (this.errorsDiv) {
+                this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
+              } else {
+                this.errorsDiv = document.getElementById("errors-div");
+              }
 
               return;
             }
@@ -359,6 +372,7 @@ export default {
           })
           .catch((errors) => {
             this.errors.push(`ERROR! ${errors}`);
+            console.log(errors);
             if (this.errorsDiv) {
               this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
             } else {
