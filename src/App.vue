@@ -243,11 +243,14 @@ export default {
     },
     downloadEngine: function () {
       if (this.queryCount < this.uploadedAlbums.length) {
-        console.log(this.queryCount, this.uploadedAlbums.length);
+        // console.log(this.queryCount, this.uploadedAlbums.length);
         this.discogsQuery(this.uploadedAlbums[this.queryCount][0]);
         this.queryCount += 1;
       } else {
-        console.log("no more albums to search", this.uploadedAlbums);
+        this.logs.push("Download Complete!");
+        console.log("Download Complete!");
+        console.log("Uploaded Albums:", this.uploadedAlbums);
+        console.log("Downloaded Albums:", this.downloadedArtists);
       }
     },
     discogsQuery: function (artist) {
@@ -284,42 +287,46 @@ export default {
               return;
             }
 
+            //to avoid the wrong artist showing up, we make sure it's the one we search for
             var selectedAlbums = response.data.results.filter((album) => {
               if (
-                album.title.split(" - ")[0].toLowerCase() ===
-                artist.toLowerCase()
+                album.title.split(" - ")[0].toUpperCase() ===
+                artist.toUpperCase()
               ) {
                 return album;
               }
             });
 
+            //sort by release year
             var sortedAlbums = selectedAlbums.sort((a, b) => {
               return a.year > b.year ? 1 : -1;
             });
 
+            //mark them collected if we uploaded them
             sortedAlbums.map((album) => {
               this.uploadedAlbums.forEach((upAlbum) => {
-                if (upAlbum[1] === album.title.split(" - ")[1].toLowerCase()) {
+                if (
+                  upAlbum[1].toUpperCase() ===
+                  album.title.split(" - ")[1].toUpperCase()
+                ) {
                   album.collected = true;
                 }
-                //  else {
-                //   console.log(
-                //     "no match",
-                //     upAlbum[1],
-                //     album.title.split(" - ")[1].toLowerCase()
-                //   );
-                // }
               });
             });
 
+            //add them to the list
             var newArtist = {
               artist: artist,
               albums: sortedAlbums,
             };
             this.downloadedArtists.push(newArtist);
+
+            //alphabetize the list of artists
             this.downloadedArtists = this.downloadedArtists.sort((a, b) => {
               return a.artist > b.artist ? 1 : -1;
             });
+
+            //clear out the search (for single search)
             if (artist === this.query) {
               this.query = "";
             }
