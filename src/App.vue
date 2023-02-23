@@ -48,20 +48,37 @@
         </div>
         <div class="row">
           <div class="col">
-            <div class="form-check form-switch">
-              <label class="form-check-label" for="artcheckbox"
+            <div class="form-check form-switch text-start">
+              <label class="form-check-label" for="albumcheckbox"
                 >Display Album Art</label
               >
               <input
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
-                id="artcheckbox"
+                id="albumcheckbox"
                 checked
                 v-model="displayAlbums"
               />
             </div>
           </div>
+          <div class="col">
+            <div class="form-check form-switch text-start">
+              <label class="form-check-label" for="collectedcheckbox"
+                >Display Collected Albums</label
+              >
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="collectedcheckbox"
+                checked
+                v-model="displayCollected"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="row">
           <div class="col">
             <div class="input-group mb-3">
               <span class="input-group-text" id="basic-addon1"
@@ -115,7 +132,6 @@
           <th scope="col">Album</th>
           <th scope="col">Year</th>
           <th scope="col">Id</th>
-
           <th scope="col" v-if="displayAlbums">Cover</th>
         </tr>
       </thead>
@@ -158,6 +174,11 @@
   font-weight: 200;
   text-decoration: line-through;
 }
+
+img {
+  height: 125px;
+  width: 125px;
+}
 </style>
 
 <script>
@@ -176,6 +197,7 @@ export default {
       searchedArtists: [],
       uploadedAlbums: [],
       displayAlbums: true,
+      displayCollected: true,
       readyToDownloadInfo: false,
       queryCount: 0,
       filteredYear: 1900,
@@ -185,7 +207,11 @@ export default {
     computedFiltered() {
       return this.downloadedArtists.map((artist) => {
         return artist.albums.filter((album) => {
-          return album.year >= this.filteredYear;
+          return (
+            (album.year >= this.filteredYear &&
+              album.collected === this.displayCollected) ||
+            (album.year >= this.filteredYear && !album.collected)
+          );
         });
       });
     },
