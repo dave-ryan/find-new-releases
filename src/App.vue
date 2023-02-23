@@ -79,7 +79,11 @@
         </div>
         <div class="row bg-light font-monospace" v-if="logs.length > 0">
           <div class="col-12">Log:</div>
-          <div class="col-12">
+          <div
+            class="col-12 overflow-scroll"
+            style="max-height: 300px"
+            id="logs-div"
+          >
             <div v-for="(log, index) in logs" :key="index">
               {{ log }}
             </div>
@@ -90,7 +94,11 @@
           v-if="errors.length > 0"
         >
           <div class="col-12">Errors:</div>
-          <div class="col-12">
+          <div
+            class="col-12 overflow-scroll"
+            style="max-height: 300px"
+            id="errors-div"
+          >
             <div v-for="(error, index) in errors" :key="index">
               {{ error }}
             </div>
@@ -161,7 +169,9 @@ export default {
     return {
       query: "",
       errors: [],
+      errorsDiv: {},
       logs: [],
+      logsDiv: null,
       downloadedArtists: [],
       searchedArtists: [],
       uploadedAlbums: [],
@@ -208,6 +218,7 @@ export default {
 
             this.uploadedAlbums = results.data;
             this.readyToDownloadInfo = true;
+            // console.log(this.uploadedAlbums, "uploaded!");
 
             // console.log("string", JSON.stringify(results.data));
             // this.downloadEngine(results.data);
@@ -238,16 +249,16 @@ export default {
       } else {
         console.log("no more albums to search", this.uploadedAlbums);
       }
-      // this.uploadedAlbums.forEach((row) => {
-      //   this.discogsQuery(row[0]);
-      // });
     },
     discogsQuery: function (artist) {
       if (!this.duplicationCheck(artist)) {
         this.searchedArtists.push([artist, ""]);
-        // console.log(`downloading info on ${artist}...`);
         this.logs.push(`downloading info on ${artist}...`);
-
+        if (this.logsDiv) {
+          this.logsDiv.scrollTop = this.logsDiv.scrollHeight;
+        } else {
+          this.logsDiv = document.getElementById("logs-div");
+        }
         var self = this;
         setTimeout(function () {
           // console.log("Executed after 1 second");
@@ -267,6 +278,9 @@ export default {
 
             if (response.data.results.length === 0) {
               this.errors.push(`Unable to find ${artist}`);
+              this.errorsDiv = document.getElementById("errors-div");
+              this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
+
               return;
             }
 
@@ -283,6 +297,21 @@ export default {
               return a.year > b.year ? 1 : -1;
             });
 
+            sortedAlbums.map((album) => {
+              this.uploadedAlbums.forEach((upAlbum) => {
+                if (upAlbum[1] === album.title.split(" - ")[1].toLowerCase()) {
+                  album.collected = true;
+                }
+                //  else {
+                //   console.log(
+                //     "no match",
+                //     upAlbum[1],
+                //     album.title.split(" - ")[1].toLowerCase()
+                //   );
+                // }
+              });
+            });
+
             var newArtist = {
               artist: artist,
               albums: sortedAlbums,
@@ -296,9 +325,12 @@ export default {
             }
           })
           .catch((errors) => {
-            console.log("error!", errors);
-            // console.log("ERROR!!", this.queryCount);
-            // this.downloadEngine;
+            this.errors.push(`ERROR! ${errors}`);
+            if (this.errorsDiv) {
+              this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
+            } else {
+              this.errorsDiv = document.getElementById("errors-div");
+            }
           });
       } else {
         console.log("dupe detected, and ignored");
