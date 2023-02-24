@@ -5,7 +5,16 @@
       <div class="col submission-column">
         <div class="row mb-5">
           <div class="col-12">
-            <h2>Upload a .csv file to see what albums you've been missing</h2>
+            <h2>Upload a .csv File</h2>
+            <h2>See What Albums You've Been Missing</h2>
+            <button
+              type="button"
+              class="btn btn-sm btn-light mb-5"
+              data-bs-toggle="modal"
+              data-bs-target="#faqmodal"
+            >
+              What? I need help...
+            </button>
             <div class="input-group">
               <input
                 type="file"
@@ -183,6 +192,55 @@
         </table>
       </div>
     </div>
+
+    <!-- FAQ Modal -->
+    <div
+      class="modal fade"
+      id="faqmodal"
+      tabindex="-1"
+      aria-labelledby="faqmodalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="faqmodalLabel">FAQ</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            You will need to upload a .csv file with the columns Artist and
+            Album. You don't have to use a header but you can if you want to. If
+            you are using MusicBee (you should) and you have a large collection,
+            you can use several tools. First is the
+            <a
+              href="https://www.getmusicbee.com/addons/plugins/49/additional-tagging-amp-reporting-tools/"
+              target="_blank"
+              >Additional Tagging & Reporting Tools Plugin</a
+            >. By using the Library Report feature, you can easily export a .csv
+            of all the artists and all the albums you have. If you want to
+            narrow this down to only artists that you actually listen to, you
+            can use the formula
+            <span class="font-monospace">{{ musicBeeFormula }}</span> to make a
+            playlist of artists that you've only listened to a number of times,
+            and then use that list when exporting a csv with the reporting tool.
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -219,6 +277,7 @@ export default {
       readyToDownloadInfo: false,
       queryCount: 0,
       filteredYear: 1900,
+      musicBeeFormula: "$Sum(<play count>, <album artist>)",
     };
   },
   computed: {
