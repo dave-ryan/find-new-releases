@@ -177,7 +177,13 @@
                 <td>
                   {{ album.year }}
                 </td>
-                <td>{{ album.id }}</td>
+                <td>
+                  <a
+                    :href="'https://www.discogs.com/master/' + album.master_id"
+                    target="_blank"
+                    >{{ album.id }}</a
+                  >
+                </td>
                 <td v-if="displayAlbums">
                   <a
                     :href="'https://www.discogs.com/master/' + album.master_id"
