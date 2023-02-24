@@ -117,7 +117,15 @@
             id="errors-div"
           >
             <div v-for="(error, index) in errors" :key="index">
-              {{ error }}
+              {{ error.message }}
+              <a
+                :href="`https://www.discogs.com/search/?q=${error.artist.replace(
+                  /\s/g,
+                  '+'
+                )}&type=all`"
+                target="_blank"
+                >(manual search)</a
+              >
             </div>
           </div>
         </div>
@@ -131,7 +139,7 @@
         </button>
       </div>
     </div>
-    <div class="row">
+    <div class="row" v-if="computedFiltered.length > 0">
       <div class="col-12">
         <table class="table">
           <thead>
@@ -316,7 +324,10 @@ export default {
             // this.queryCount += 1;
 
             if (response.data.results.length === 0) {
-              this.errors.push(`Unable to find ${artist}`);
+              this.errors.push({
+                message: `Unable to find ${artist}`,
+                artist: artist,
+              });
               if (this.errorsDiv) {
                 this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
               } else {
