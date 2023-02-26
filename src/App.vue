@@ -470,8 +470,13 @@ export default {
       }
     },
     clearResults: function () {
-      this.downloadedArtists = [];
-      this.uploadedAlbums = [];
+      if (confirm("ARE YOU SURE!?")) {
+        this.downloadedArtists = [];
+        this.uploadedAlbums = [];
+        this.searchedArtists = [];
+        this.logs = [];
+        this.errors = [];
+      }
     },
   },
 };
