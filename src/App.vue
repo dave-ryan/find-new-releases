@@ -225,7 +225,7 @@
               to use a header but you can if you want to.
             </p>
             <p>
-              x If you are using MusicBee (you should) and you have a large
+              If you are using MusicBee (you should) and you have a large
               collection, you can use several tools. First is the
               <a
                 href="https://www.getmusicbee.com/addons/plugins/49/additional-tagging-amp-reporting-tools/"
@@ -234,11 +234,10 @@
               >. By using the Library Report feature, you can easily export a
               .csv of all the artists and all the albums you have. If you want
               to narrow this down to only artists that you actually listen to,
-              you can use the formula
-              <span class="font-monospace">{{ musicBeeFormula }}</span> to make
-              a playlist of artists that you've only listened to a number of
-              times, and then use that list when exporting a csv with the
-              reporting tool.
+              you can use the custom display fields to show many plays the
+              artist has. Use the formula
+              <span class="font-monospace">{{ musicBeeFormula }}</span> to see
+              how many plays per artist you have.
             </p>
           </div>
           <div class="modal-footer">
