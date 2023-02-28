@@ -36,55 +36,7 @@
             </div>
           </div>
         </div>
-        <div class="row">
-          <div class="col">
-            <div class="form-check form-switch form-check-inline">
-              <label class="form-check-label" for="albumcheckbox"
-                >Display Album Art</label
-              >
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="albumcheckbox"
-                checked
-                v-model="displayAlbums"
-              />
-            </div>
-          </div>
-          <div class="col">
-            <div class="form-check form-switch form-check-inline">
-              <label class="form-check-label" for="collectedcheckbox"
-                >Display Collected Albums</label
-              >
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="collectedcheckbox"
-                checked
-                v-model="displayCollected"
-              />
-            </div>
-          </div>
-        </div>
         <div class="row mb-5">
-          <div class="col">
-            <div class="input-group">
-              <span class="input-group-text" id="basic-addon1"
-                >Only Display Albums Released Since</span
-              >
-              <input
-                v-model="filteredYear"
-                type="number"
-                class="form-control"
-                aria-label="Year"
-                aria-describedby="basic-addon1"
-              />
-            </div>
-          </div>
-        </div>
-        <div class="row mb-3">
           <div class="col">
             <form @submit.prevent="discogsQuery(query.toLowerCase())">
               <div class="input-group">
@@ -103,102 +55,158 @@
             </form>
           </div>
         </div>
-        <div class="row bg-light font-monospace mb-3" v-if="logs.length > 0">
-          <div class="col-12">Log:</div>
-          <div
-            class="col-12 overflow-scroll"
-            style="max-height: 300px"
-            id="logs-div"
-          >
-            <div v-for="(log, index) in logs" :key="index">
-              {{ log }}
+
+        <transition name="upload">
+          <div v-if="logs.length > 0" id="controls">
+            <div class="row mb-3">
+              <div class="col">
+                <div class="form-check form-switch form-check-inline">
+                  <label class="form-check-label" for="albumcheckbox"
+                    >Album Art</label
+                  >
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="albumcheckbox"
+                    checked
+                    v-model="displayAlbums"
+                  />
+                </div>
+              </div>
+              <div class="col align-middle">
+                <div class="form-check form-switch form-check-inline">
+                  <label class="form-check-label" for="collectedcheckbox"
+                    >Collected Albums</label
+                  >
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id="collectedcheckbox"
+                    checked
+                    v-model="displayCollected"
+                  />
+                </div>
+              </div>
+              <div class="col">
+                <div class="input-group-sm input-group">
+                  <span class="input-group-text" id="basic-addon1"
+                    >Released Since</span
+                  >
+                  <input
+                    v-model="filteredYear"
+                    type="number"
+                    class="form-control"
+                    aria-label="Year"
+                    aria-describedby="basic-addon1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="row logs_and_errors mb-3">
+              <div class="col-6 bg-light font-monospace">
+                <div>Logs:</div>
+                <div class="loggybox" id="logs-div">
+                  <div v-for="(log, index) in logs" :key="index">
+                    {{ log }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-6 bg-dark text-danger font-monospace p-0">
+                <div>Errors:</div>
+                <div class="loggybox p-0" id="errors-div">
+                  <div v-for="(error, index) in errors" :key="index">
+                    {{ error.message }}
+                    <a
+                      :href="`https://www.discogs.com/search/?q=${error.artist.replace(
+                        /\s/g,
+                        '+'
+                      )}&type=all`"
+                      target="_blank"
+                      v-if="error.artist"
+                      >(manual search)
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-5">
+              <div class="col">
+                <button
+                  class="btn btn-danger"
+                  type="button"
+                  @click="clearResults"
+                >
+                  Clear Results
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-        <div
-          class="row bg-dark text-danger font-monospace mb-3"
-          v-if="errors.length > 0"
-        >
-          <div class="col-12">Errors:</div>
-          <div
-            class="col-12 overflow-scroll"
-            style="max-height: 300px"
-            id="errors-div"
-          >
-            <div v-for="(error, index) in errors" :key="index">
-              {{ error.message }}
-              <a
-                :href="`https://www.discogs.com/search/?q=${error.artist.replace(
-                  /\s/g,
-                  '+'
-                )}&type=all`"
-                target="_blank"
-                >(manual search)</a
-              >
-            </div>
-          </div>
-        </div>
+        </transition>
       </div>
+
       <div class="col-2"></div>
     </div>
-    <div class="row">
-      <div class="col">
-        <button class="btn btn-danger" type="button" @click="clearResults">
-          Clear Results
-        </button>
-      </div>
-    </div>
-    <div class="row" v-if="computedFiltered.length > 0">
-      <div class="col-12">
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">Artist</th>
-              <th scope="col">Album</th>
-              <th scope="col">Year</th>
-              <th scope="col">Id</th>
-              <th scope="col" v-if="displayAlbums">Cover</th>
-            </tr>
-          </thead>
-          <tbody class="table-group-divider">
-            <template v-for="artist in computedFiltered" :key="artist.artist">
-              <tr
-                v-for="album in artist"
-                :key="album.id"
-                class="mt-3"
-                :class="{ collected: album.collected }"
-              >
-                <td v-if="album.title">
-                  {{ album.title.split(" - ")[0] }}
-                </td>
-                <td v-if="album.title">
-                  {{ album.title.split(" - ")[1] }}
-                </td>
-                <td>
-                  {{ album.year }}
-                </td>
-                <td>
-                  <a
-                    :href="'https://www.discogs.com/master/' + album.master_id"
-                    target="_blank"
-                    >{{ album.id }}</a
-                  >
-                </td>
-                <td v-if="displayAlbums">
-                  <a
-                    :href="'https://www.discogs.com/master/' + album.master_id"
-                    target="_blank"
-                  >
-                    <img :src="album.thumb" alt="" />
-                  </a>
-                </td>
+    <transition name="upload">
+      <div class="row" v-if="computedFiltered.length > 0">
+        <div class="col-12">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Artist</th>
+                <th scope="col">Album</th>
+                <th scope="col">Year</th>
+                <th scope="col">Id</th>
+                <th scope="col" v-if="displayAlbums">Cover</th>
               </tr>
-            </template>
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="table-group-divider">
+              <template v-for="artist in computedFiltered" :key="artist.artist">
+                <tr
+                  v-for="album in artist"
+                  :key="album.id"
+                  class="mt-3"
+                  :class="{ collected: album.collected }"
+                >
+                  <td v-if="album.title">
+                    {{ album.title.split(" - ")[0] }}
+                  </td>
+                  <td v-if="album.title">
+                    {{ album.title.split(" - ")[1] }}
+                  </td>
+                  <td>
+                    {{ album.year }}
+                  </td>
+                  <td>
+                    <a
+                      :href="
+                        'https://www.discogs.com/master/' + album.master_id
+                      "
+                      target="_blank"
+                      >{{ album.id }}</a
+                    >
+                  </td>
+                  <td v-if="displayAlbums">
+                    <a
+                      :href="
+                        'https://www.discogs.com/master/' + album.master_id
+                      "
+                      target="_blank"
+                    >
+                      <img :src="album.thumb" alt="" />
+                    </a>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-
+    </transition>
     <!-- FAQ Modal -->
     <div
       class="modal fade"
@@ -265,6 +273,46 @@
 img {
   height: 125px;
   width: 125px;
+}
+
+.loggybox {
+  height: 300px;
+  overflow-y: scroll;
+}
+
+.upload-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.upload-leave-active {
+  transition: all 0.5s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.upload-enter-from,
+.upload-leave-to {
+  transform: translateY(100px);
+  opacity: 0;
+}
+
+.loggybox::-webkit-scrollbar {
+  width: 20px;
+}
+
+.loggybox::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.loggybox::-webkit-scrollbar-thumb {
+  background-color: #d6dee1;
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+.loggybox::-webkit-scrollbar-thumb:hover {
+  background-color: #a8bbbf;
+}
+.loggybox::-webkit-scrollbar-corner {
+  background: rgba(0, 0, 0, 0);
 }
 </style>
 
