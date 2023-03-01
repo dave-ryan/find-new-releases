@@ -5,7 +5,7 @@
       <div class="col submission-column">
         <div class="row mb-5">
           <div class="col-12">
-            <h2>Upload a .csv File</h2>
+            <h2>Upload a .csv of Your Collection</h2>
             <h2>See What Albums You've Been Missing</h2>
             <button
               type="button"
@@ -15,25 +15,32 @@
             >
               What? I need help...
             </button>
-            <div class="input-group">
-              <input
-                type="file"
-                class="form-control fw-bold"
-                id="inputGroupFile04"
-                aria-describedby="inputGroupFileAddon04"
-                aria-label="Upload"
-                @change="handleFileChange($event)"
-              />
-              <button
-                class="btn btn-outline-primary fw-bold"
-                type="submit"
-                id="inputGroupFileAddon04"
-                v-if="readyToDownloadInfo"
-                @click="downloadEngine()"
-              >
-                Find New Releases
-              </button>
-            </div>
+            <transition name="left">
+              <div v-if="!downloadStarted">
+                <form action="" class="mb-2">
+                  <label for="">
+                    <input
+                      type="file"
+                      class="form-control input-group"
+                      @change="handleFileChange($event)"
+                      accept=".csv"
+                    />
+                  </label>
+                </form>
+              </div>
+            </transition>
+            <transition name="right">
+              <div v-if="readyToDownloadInfo && !downloadStarted">
+                <button
+                  class="btn btn-outline-primary fw-bold"
+                  @click="startDownload()"
+                >
+                  <!--                 v-if="readyToDownloadInfo"
+ -->
+                  Begin Download
+                </button>
+              </div>
+            </transition>
           </div>
         </div>
         <div class="row mb-5">
@@ -280,6 +287,34 @@ img {
   overflow-y: scroll;
 }
 
+.left-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.left-leave-active {
+  transition: all 0.5s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.left-enter-from,
+.left-leave-to {
+  transform: translateX(-50px);
+  opacity: 0;
+}
+
+.right-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.right-leave-active {
+  transition: all 0.5s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.right-enter-from,
+.right-leave-to {
+  transform: translateX(50px);
+  opacity: 0;
+}
+
 .upload-enter-active {
   transition: all 0.3s ease-out;
 }
@@ -331,6 +366,7 @@ export default {
       downloadedArtists: [],
       searchedArtists: [],
       uploadedAlbums: [],
+      downloadStarted: false,
       displayAlbums: true,
       displayCollected: true,
       readyToDownloadInfo: false,
@@ -403,6 +439,10 @@ export default {
         return false;
       }
     },
+    startDownload() {
+      this.downloadStarted = true;
+      this.downloadEngine();
+    },
     downloadEngine: function () {
       if (this.queryCount < this.uploadedAlbums.length) {
         // console.log(this.queryCount, this.uploadedAlbums.length);
@@ -413,6 +453,11 @@ export default {
         console.log("Download Complete!");
         console.log("Uploaded Albums:", this.uploadedAlbums);
         console.log("Downloaded Albums:", this.downloadedArtists);
+        if (this.logsDiv) {
+          this.logsDiv.scrollTop = this.logsDiv.scrollHeight;
+        } else {
+          this.logsDiv = document.getElementById("logs-div");
+        }
       }
     },
     discogsQuery: function (artist) {
@@ -524,6 +569,7 @@ export default {
         this.searchedArtists = [];
         this.logs = [];
         this.errors = [];
+        this.downloadStarted = false;
       }
     },
   },
