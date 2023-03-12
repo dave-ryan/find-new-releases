@@ -5,62 +5,53 @@
       <div class="col submission-column">
         <div class="row mb-5">
           <div class="col-12">
-            <h2>Upload a .csv of Your Collection</h2>
-            <h2>See What Albums You've Been Missing</h2>
+            <transition name="right">
+              <div v-if="!downloadStarted">
+                <h2>Upload A .csv File Of Your Collection</h2>
+                <h2>See What Albums You've Been Missing</h2>
+              </div>
+            </transition>
             <button
               type="button"
-              class="btn btn-sm btn-light mb-5"
+              class="btn btn-sm btn-light"
               data-bs-toggle="modal"
               data-bs-target="#faqmodal"
             >
               What? I need help...
             </button>
-            <transition name="left">
-              <div v-if="!downloadStarted">
-                <form action="" class="mb-2">
-                  <label for="csvUpload"> Upload CSV </label>
-                  <input
-                    type="file"
-                    class="form-control input-group"
-                    @change="handleFileChange($event)"
-                    accept=".csv"
-                    id="csvUpload"
-                  />
-                </form>
-              </div>
-            </transition>
-            <transition name="left">
-              <div v-if="!downloadStarted">
-                <form action="" class="mb-2">
-                  <label for="jsonUpload">
-                    Upload JSON from previous search
-                  </label>
-                  <input
-                    type="file"
-                    class="form-control input-group"
-                    @change="handleFileChange($event)"
-                    accept=".json"
-                    id="jsonUpload"
-                  />
-                </form>
-              </div>
-            </transition>
-            <transition name="right">
-              <div v-if="readyToDownloadInfo && !downloadStarted">
-                <button
-                  class="btn btn-outline-primary fw-bold"
-                  @click="startDownload()"
-                >
-                  <!--                 v-if="readyToDownloadInfo"
- -->
-                  Begin Download
-                </button>
-              </div>
-            </transition>
           </div>
+          <transition name="left">
+            <div v-if="!downloadStarted">
+              <form class="mt-4">
+                <label for="csvUpload" class="btn btn-lg btn-outline-primary">
+                  Upload CSV
+                </label>
+                <input
+                  type="file"
+                  class="invisible input-group"
+                  @change="handleFileChange($event)"
+                  accept=".csv"
+                  id="csvUpload"
+                />
+              </form>
+            </div>
+          </transition>
+
+          <transition name="right">
+            <div v-if="readyToDownloadInfo && !downloadStarted">
+              <button
+                class="btn btn-primary fw-bold mt-1"
+                @click="startDownload()"
+              >
+                <!--                 v-if="readyToDownloadInfo"
+ -->
+                Begin Download
+              </button>
+            </div>
+          </transition>
         </div>
         <div class="row mb-5">
-          <div class="col">
+          <div class="col-12">
             <form @submit.prevent="discogsQuery(query.toLowerCase())">
               <div class="input-group">
                 <span class="input-group-text">Individual Artist Search</span>
@@ -69,13 +60,29 @@
                   v-model="query"
                   class="form-control"
                   id="queryinput"
-                  placeholder="example: interpol"
+                  placeholder=""
                 />
                 <button class="btn btn-outline-primary" type="submit">
                   Search!
                 </button>
               </div>
             </form>
+            <transition name="left">
+              <div v-if="!downloadStarted">
+                <form class="mt-2">
+                  <label for="jsonUpload" class="btn btn-outline-secondary">
+                    Upload JSON from previous search
+                  </label>
+                  <input
+                    type="file"
+                    class="invisible input-group"
+                    @change="handleFileChange($event)"
+                    accept=".json"
+                    id="jsonUpload"
+                  />
+                </form>
+              </div>
+            </transition>
           </div>
         </div>
 
@@ -345,7 +352,7 @@ img {
 }
 
 .upload-enter-active {
-  transition: all 0.3s ease-out;
+  transition: all 1.5s ease-out;
 }
 
 .upload-leave-active {
