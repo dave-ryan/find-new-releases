@@ -18,14 +18,30 @@
             <transition name="left">
               <div v-if="!downloadStarted">
                 <form action="" class="mb-2">
-                  <label for="">
-                    <input
-                      type="file"
-                      class="form-control input-group"
-                      @change="handleFileChange($event)"
-                      accept=".csv"
-                    />
+                  <label for="csvUpload"> Upload CSV </label>
+                  <input
+                    type="file"
+                    class="form-control input-group"
+                    @change="handleFileChange($event)"
+                    accept=".csv"
+                    id="csvUpload"
+                  />
+                </form>
+              </div>
+            </transition>
+            <transition name="left">
+              <div v-if="!downloadStarted">
+                <form action="" class="mb-2">
+                  <label for="jsonUpload">
+                    Upload JSON from previous search
                   </label>
+                  <input
+                    type="file"
+                    class="form-control input-group"
+                    @change="handleFileChange($event)"
+                    accept=".json"
+                    id="jsonUpload"
+                  />
                 </form>
               </div>
             </transition>
@@ -115,7 +131,11 @@
             <div class="row logs_and_errors mb-3">
               <div class="col-6 bg-light font-monospace">
                 <div>Logs:</div>
-                <div class="loggybox" id="logs-div">
+                <div
+                  class="loggybox"
+                  id="logs-div"
+                  style="flex-direction: column-reverse"
+                >
                   <div v-for="(log, index) in logs" :key="index">
                     {{ log }}
                   </div>
@@ -142,6 +162,15 @@
             </div>
 
             <div class="row mb-5">
+              <div class="col">
+                <button
+                  class="btn btn-success"
+                  type="button"
+                  @click="downloadJSON"
+                >
+                  Download Results
+                </button>
+              </div>
               <div class="col">
                 <button
                   class="btn btn-danger"
@@ -354,6 +383,7 @@ img {
 <script>
 import axios from "axios";
 import Papa from "papaparse";
+import { saveAs } from "file-saver";
 
 export default {
   data: function () {
@@ -390,38 +420,29 @@ export default {
   },
   methods: {
     handleFileChange(e) {
-      // Check if file is selected
       if (e.target.files && e.target.files[0]) {
-        // Get uploaded file
         const file = e.target.files[0],
-          // Get file size
           fileSize = Math.round((file.size / 1024 / 1024) * 100) / 100,
-          // Get file extension
           fileExtention = file.name.split(".").pop(),
-          // Get file name
-          fileName = file.name.split(".").shift(),
-          // Check if file is an image
-          isImage = ["jpg", "jpeg", "png", "gif"].includes(fileExtention);
-        // Print to console
-        console.log(fileSize, fileExtention, fileName, isImage);
+          fileName = file.name.split(".").shift();
+        console.log(fileSize, fileExtention, fileName);
 
-        Papa.parse(file, {
-          skipEmptyLines: true,
+        if (fileExtention === "csv") {
+          Papa.parse(file, {
+            skipEmptyLines: true,
 
-          complete: function (results) {
-            // console.log("results", results);
-            // this.uploadedAlbums.map((album) => {
-            //   album.collected = true;
-            // });
-
-            this.uploadedAlbums = results.data;
-            this.readyToDownloadInfo = true;
-            // console.log(this.uploadedAlbums, "uploaded!");
-
-            // console.log("string", JSON.stringify(results.data));
-            // this.downloadEngine(results.data);
-          }.bind(this),
-        });
+            complete: function (results) {
+              this.uploadedAlbums = results.data;
+              this.readyToDownloadInfo = true;
+              // console.log(this.uploadedAlbums, "uploaded!");
+              // console.log("string", JSON.stringify(results.data));
+              // this.downloadEngine(results.data);
+            }.bind(this),
+          });
+        } else if (fileExtention === "json") {
+          console.log(file);
+          this.downloadedArtists = JSON.load(file);
+        }
       }
     },
     isFileTypeValid(fileExtention) {
@@ -453,11 +474,7 @@ export default {
         console.log("Download Complete!");
         console.log("Uploaded Albums:", this.uploadedAlbums);
         console.log("Downloaded Albums:", this.downloadedArtists);
-        if (this.logsDiv) {
-          this.logsDiv.scrollTop = this.logsDiv.scrollHeight;
-        } else {
-          this.logsDiv = document.getElementById("logs-div");
-        }
+        this.logsDiv.scrollIntoView(false);
       }
     },
     discogsQuery: function (artist) {
@@ -562,6 +579,13 @@ export default {
         }, 200);
       }
     },
+    downloadJSON() {
+      var fileToSave = new Blob([JSON.stringify(this.downloadedArtists)], {
+        type: "application/json",
+      });
+      saveAs(fileToSave, "Music Results");
+    },
+
     clearResults: function () {
       if (confirm("ARE YOU SURE!?")) {
         this.downloadedArtists = [];
