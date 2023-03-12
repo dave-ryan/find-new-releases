@@ -520,7 +520,7 @@ export default {
         this.downloadComplete = true;
         console.log("Uploaded Albums:", this.uploadedAlbums);
         console.log("Downloaded Albums:", this.downloadedArtists);
-        this.logsDiv.scrollIntoView(false);
+        // this.logsDiv.scrollIntoView(false);
       }
     },
     discogsQuery: function (artist) {
@@ -549,6 +549,7 @@ export default {
             // console.log("discogs response", response);
             // this.queryCount += 1;
 
+            //check if it's unable to find anything
             if (response.data.results.length === 0) {
               this.errors.push({
                 message: `Unable to find ${artist}`,
@@ -572,6 +573,20 @@ export default {
                 return album;
               }
             });
+
+            //check if there's nothing there (i.e. it finds the artist but there are no albums, searching 'test' will do this.)
+            if (selectedAlbums.length === 0) {
+              this.errors.push({
+                message: `Unable to find ${artist}`,
+                artist: artist,
+              });
+              if (this.errorsDiv) {
+                this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
+              } else {
+                this.errorsDiv = document.getElementById("errors-div");
+              }
+              return;
+            }
 
             //sort by release year
             var sortedAlbums = selectedAlbums.sort((a, b) => {
