@@ -440,10 +440,20 @@ export default {
             }.bind(this),
           });
         } else if (fileExtention === "json") {
-          console.log(file);
-          this.downloadedArtists = JSON.load(file);
+          console.log(e.target.result);
+          console.log("....", e.target.files);
+          let reader = new FileReader();
+          reader.onload = this.updateJSON;
+          reader.readAsText(file);
         }
       }
+    },
+    updateJSON(event) {
+      let str = event.target.result;
+      let json = JSON.parse(str);
+      // console.log("string", str);
+      // console.log("json", json);
+      this.downloadedArtists = json;
     },
     isFileTypeValid(fileExtention) {
       if (this.accept.split(",").includes(fileExtention)) {
