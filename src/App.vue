@@ -3,22 +3,22 @@
     <div class="row">
       <div class="col-2"></div>
       <div class="col submission-column">
-        <div class="row mb-5">
+        <div class="row">
           <div class="col-12">
             <transition name="right">
               <div v-if="!downloadStarted">
                 <h2>Upload A .csv File Of Your Collection</h2>
                 <h2>See What Albums You've Been Missing</h2>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-light"
+                  data-bs-toggle="modal"
+                  data-bs-target="#faqmodal"
+                >
+                  What? I need help...
+                </button>
               </div>
             </transition>
-            <button
-              type="button"
-              class="btn btn-sm btn-light"
-              data-bs-toggle="modal"
-              data-bs-target="#faqmodal"
-            >
-              What? I need help...
-            </button>
           </div>
           <transition name="left">
             <div v-if="!downloadStarted">
@@ -43,30 +43,36 @@
                 class="btn btn-primary fw-bold mt-1"
                 @click="startDownload()"
               >
-                <!--                 v-if="readyToDownloadInfo"
- -->
                 Begin Download
               </button>
             </div>
           </transition>
+          <transition name="right">
+            <div v-if="!downloadStarted" class="mb-5"></div>
+          </transition>
         </div>
-        <div class="row mb-5">
+        <div class="row">
           <div class="col-12">
-            <form @submit.prevent="discogsQuery(query.toLowerCase())">
-              <div class="input-group">
-                <span class="input-group-text">Individual Artist Search</span>
-                <input
-                  type="text"
-                  v-model="query"
-                  class="form-control"
-                  id="queryinput"
-                  placeholder=""
-                />
-                <button class="btn btn-outline-primary" type="submit">
-                  Search!
-                </button>
-              </div>
-            </form>
+            <transition name="left">
+              <form
+                v-if="!downloadStarted"
+                @submit.prevent="discogsQuery(query.toLowerCase())"
+              >
+                <div class="input-group">
+                  <span class="input-group-text">Individual Artist Search</span>
+                  <input
+                    type="text"
+                    v-model="query"
+                    class="form-control"
+                    id="queryinput"
+                    placeholder=""
+                  />
+                  <button class="btn btn-outline-primary" type="submit">
+                    Search!
+                  </button>
+                </div>
+              </form>
+            </transition>
             <transition name="left">
               <div v-if="!downloadStarted">
                 <form class="mt-2">
@@ -186,6 +192,27 @@
                 >
                   Clear Results
                 </button>
+              </div>
+            </div>
+            <div class="row mb-5" v-if="downloadComplete && downloadStarted">
+              <div class="col">
+                <form @submit.prevent="discogsQuery(query.toLowerCase())">
+                  <div class="input-group">
+                    <span class="input-group-text"
+                      >Individual Artist Search</span
+                    >
+                    <input
+                      type="text"
+                      v-model="query"
+                      class="form-control"
+                      id="queryinput"
+                      placeholder=""
+                    />
+                    <button class="btn btn-outline-primary" type="submit">
+                      Search!
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -404,6 +431,7 @@ export default {
       searchedArtists: [],
       uploadedAlbums: [],
       downloadStarted: false,
+      downloadComplete: false,
       displayAlbums: true,
       displayCollected: true,
       readyToDownloadInfo: false,
@@ -479,6 +507,7 @@ export default {
     },
     startDownload() {
       this.downloadStarted = true;
+      this.downloadComplete = false;
       this.downloadEngine();
     },
     downloadEngine: function () {
@@ -488,7 +517,7 @@ export default {
         this.queryCount += 1;
       } else {
         this.logs.push("Download Complete!");
-        console.log("Download Complete!");
+        this.downloadComplete = true;
         console.log("Uploaded Albums:", this.uploadedAlbums);
         console.log("Downloaded Albums:", this.downloadedArtists);
         this.logsDiv.scrollIntoView(false);
@@ -611,6 +640,7 @@ export default {
         this.logs = [];
         this.errors = [];
         this.downloadStarted = false;
+        this.downloadComplete = false;
       }
     },
   },
