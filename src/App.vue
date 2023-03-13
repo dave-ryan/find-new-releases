@@ -28,12 +28,13 @@
                 </label>
                 <input
                   type="file"
-                  class="invisible input-group"
+                  class="d-none input-group"
                   @change="handleFileChange($event)"
                   accept=".csv"
                   id="csvUpload"
                 />
               </form>
+              <div class="font-monospace">{{ uploadedFileName }}</div>
             </div>
           </transition>
 
@@ -81,7 +82,7 @@
                   </label>
                   <input
                     type="file"
-                    class="invisible input-group"
+                    class="d-none input-group"
                     @change="handleFileChange($event)"
                     accept=".json"
                     id="jsonUpload"
@@ -142,21 +143,19 @@
             </div>
 
             <div class="row logs_and_errors mb-3">
-              <div class="col-6 bg-light font-monospace">
-                <div>Logs:</div>
-                <div
-                  class="loggybox"
-                  id="logs-div"
-                  style="flex-direction: column-reverse"
-                >
+              <div class="col-6 bg-light font-monospace p-1 rounded-start">
+                <div class="border-bottom border-dark">Logs:</div>
+                <div class="loggybox" id="logs-div">
                   <div v-for="(log, index) in logs" :key="index">
                     {{ log }}
                   </div>
                 </div>
               </div>
 
-              <div class="col-6 bg-dark text-danger font-monospace p-0">
-                <div>Errors:</div>
+              <div
+                class="col-6 bg-dark text-danger font-monospace p-1 rounded-end"
+              >
+                <div class="border-bottom border-light">Errors:</div>
                 <div class="loggybox p-0" id="errors-div">
                   <div v-for="(error, index) in errors" :key="index">
                     {{ error.message }}
@@ -347,7 +346,7 @@ img {
 
 .loggybox {
   height: 300px;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .left-enter-active {
@@ -424,11 +423,12 @@ export default {
     return {
       query: "",
       errors: [],
-      errorsDiv: {},
+      errorsDiv: null,
       logs: [],
       logsDiv: null,
       downloadedArtists: [],
       searchedArtists: [],
+      uploadedFileName: "",
       uploadedAlbums: [],
       downloadStarted: false,
       downloadComplete: false,
@@ -460,6 +460,7 @@ export default {
           fileSize = Math.round((file.size / 1024 / 1024) * 100) / 100,
           fileExtention = file.name.split(".").pop(),
           fileName = file.name.split(".").shift();
+        this.uploadedFileName = fileName + "." + fileExtention;
         console.log(fileSize, fileExtention, fileName);
 
         if (fileExtention === "csv") {
@@ -475,8 +476,8 @@ export default {
             }.bind(this),
           });
         } else if (fileExtention === "json") {
-          console.log(e.target.result);
-          console.log("....", e.target.files);
+          // console.log(e.target.result);
+          // console.log("....", e.target.files);
           let reader = new FileReader();
           reader.onload = this.updateJSON;
           reader.readAsText(file);
@@ -517,24 +518,32 @@ export default {
         this.queryCount += 1;
       } else {
         this.logs.push("Download Complete!");
+        if (this.logs.length > 5) {
+          this.scrolly(this.logsDiv);
+        }
         this.downloadComplete = true;
         console.log("Uploaded Albums:", this.uploadedAlbums);
         console.log("Downloaded Albums:", this.downloadedArtists);
         // this.logsDiv.scrollIntoView(false);
       }
     },
+    scrolly(div) {
+      setTimeout(function () {
+        div.scrollTop = div.scrollHeight;
+      }, 1050);
+    },
     discogsQuery: function (artist) {
+      this.logsDiv = document.getElementById("logs-div");
+      this.errorsDiv = document.getElementById("errors-div");
       if (!this.duplicationCheck(artist)) {
         this.searchedArtists.push([artist, ""]);
-        this.logs.push(`downloading info on ${artist}...`);
-        if (this.logsDiv) {
-          this.logsDiv.scrollTop = this.logsDiv.scrollHeight;
-        } else {
-          this.logsDiv = document.getElementById("logs-div");
+        this.logs.push(`Downloading Info on '${artist}'...`);
+        if (this.logs.length > 5) {
+          this.scrolly(this.logsDiv);
         }
+
         var self = this;
         setTimeout(function () {
-          // console.log("Executed after 1 second");
           self.downloadEngine();
         }, 1000);
 
@@ -555,12 +564,9 @@ export default {
                 message: `Unable to find ${artist}`,
                 artist: artist,
               });
-              if (this.errorsDiv) {
-                this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
-              } else {
-                this.errorsDiv = document.getElementById("errors-div");
+              if (this.errors.length > 5) {
+                this.scrolly(this.errorsDiv);
               }
-
               return;
             }
 
@@ -580,10 +586,8 @@ export default {
                 message: `Unable to find ${artist}`,
                 artist: artist,
               });
-              if (this.errorsDiv) {
-                this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
-              } else {
-                this.errorsDiv = document.getElementById("errors-div");
+              if (this.errors.length > 5) {
+                this.scrolly(this.errorsDiv);
               }
               return;
             }
@@ -624,15 +628,12 @@ export default {
           })
           .catch((errors) => {
             this.errors.push(`ERROR! ${errors}`);
-            console.log(errors);
-            if (this.errorsDiv) {
-              this.errorsDiv.scrollTop = this.errorsDiv.scrollHeight;
-            } else {
-              this.errorsDiv = document.getElementById("errors-div");
+            if (this.errors.length > 5) {
+              this.scrolly(this.errorsDiv);
             }
           });
       } else {
-        console.log("dupe detected, and ignored");
+        // console.log("dupe detected, and ignored");
         self = this;
         setTimeout(function () {
           // console.log("Executed after 1 second");
