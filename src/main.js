@@ -3,8 +3,9 @@ import App from "./App.vue";
 import "bootstrap/dist/css/bootstrap.css";
 import axios from "axios";
 import "bootstrap";
+import router from "./router";
 
-createApp(App).mount("#app");
+createApp(App).use(router).mount("#app");
 
 axios.defaults.baseURL =
   process.env.NODE_ENV === "development"
