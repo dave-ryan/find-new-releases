@@ -29,16 +29,16 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h2
+            <h3
               class="modal-title"
               id="modalLabel"
               v-if="uploadedFileName.length > 0 && this.uploadstatus === 1"
             >
               File Uploaded:
               <span class="font-monospace"> {{ uploadedFileName }}</span>
-            </h2>
-            <h2 v-if="this.uploadstatus === 2">Header Mappings</h2>
-            <h2 v-if="this.uploadstatus === 3">Data Manipulation</h2>
+            </h3>
+            <h3 v-if="this.uploadstatus === 2">Header Mappings</h3>
+            <h3 v-if="this.uploadstatus === 3">Data Manipulation</h3>
             <button
               type="button"
               class="btn-close"
@@ -63,6 +63,25 @@
                   v-focus
                 />
               </form>
+              <h3 class="mt-4 mb-2">Preview</h3>
+              <table class="table table-bordered table-hover">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col" v-for="header in rawheaders" :key="header">
+                      {{ header }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="table-group-divider">
+                  <tr v-for="(row, index) in rawdata" :key="index">
+                    <td>{{ index + 1 }}</td>
+                    <td v-for="datacell in row" :key="datacell">
+                      {{ datacell }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <!-- HEADER MAPPING -->
@@ -126,6 +145,7 @@
               <table class="table table-bordered table-hover">
                 <thead>
                   <tr>
+                    <th scope="col">#</th>
                     <th scope="col" v-for="header in csvheaders" :key="header">
                       {{ header }}
                     </th>
@@ -137,6 +157,7 @@
                     :key="row.ExternalId"
                     class="mt-3"
                   >
+                    <td>{{ index + 1 }}</td>
                     <td>
                       <input
                         v-if="this.editing === `${index}, FirstName`"
