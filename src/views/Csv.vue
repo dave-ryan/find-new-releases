@@ -63,25 +63,31 @@
                   v-focus
                 />
               </form>
-              <h3 class="mt-4 mb-2">Preview</h3>
-              <table class="table table-bordered table-hover">
-                <thead>
-                  <tr>
-                    <th scope="col">#</th>
-                    <th scope="col" v-for="header in rawheaders" :key="header">
-                      {{ header }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="table-group-divider">
-                  <tr v-for="(row, index) in rawdata" :key="index">
-                    <td>{{ index + 1 }}</td>
-                    <td v-for="datacell in row" :key="datacell">
-                      {{ datacell }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div v-if="uploadedFileName.length > 0">
+                <h3 class="mt-4 mb-2">Preview</h3>
+                <table class="table table-bordered table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">#</th>
+                      <th
+                        scope="col"
+                        v-for="header in rawheaders"
+                        :key="header"
+                      >
+                        {{ header }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="table-group-divider">
+                    <tr v-for="(row, index) in rawdata" :key="index">
+                      <td>{{ index + 1 }}</td>
+                      <td v-for="datacell in row" :key="datacell">
+                        {{ datacell }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <!-- HEADER MAPPING -->
@@ -160,11 +166,12 @@
                     <td>{{ index + 1 }}</td>
                     <td>
                       <input
+                        class="form-control"
                         v-if="this.editing === `${index}, FirstName`"
                         v-model="row.FirstName"
                         type="text"
-                        @blur="editing = false"
-                        @keyup.enter="editing = false"
+                        @blur="this.editing = false"
+                        @keyup.enter="this.editing = false"
                         v-focus
                       />
                       <div
@@ -176,11 +183,12 @@
                     </td>
                     <td>
                       <input
+                        class="form-control"
                         v-if="this.editing === `${index}, LastName`"
                         v-model="row.LastName"
                         type="text"
-                        @blur="editing = false"
-                        @keyup.enter="editing = false"
+                        @blur="this.editing = false"
+                        @keyup.enter="this.editing = false"
                         v-focus
                       />
                       <div
@@ -192,11 +200,12 @@
                     </td>
                     <td>
                       <input
+                        class="form-control"
                         v-if="this.editing === `${index}, Email`"
                         v-model="row.Email"
                         type="text"
-                        @blur="editing = false"
-                        @keyup.enter="editing = false"
+                        @blur="this.editing = false"
+                        @keyup.enter="this.editing = false"
                         v-focus
                       />
                       <div
@@ -208,11 +217,12 @@
                     </td>
                     <td>
                       <input
+                        class="form-control"
                         v-if="this.editing === `${index}, ExternalId`"
                         v-model="row.ExternalId"
                         type="text"
-                        @blur="editing = false"
-                        @keyup.enter="editing = false"
+                        @blur="this.editing = false"
+                        @keyup.enter="this.editing = false"
                         v-focus
                       />
                       <div
