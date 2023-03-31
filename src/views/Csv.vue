@@ -20,8 +20,10 @@
     <div
       class="modal fade modal-xl"
       id="upload-modal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
       tabindex="-1"
-      aria-labelledby="modalLabel"
+      aria-labelledby="staticBackdropLabel"
       aria-hidden="true"
     >
       <div class="modal-dialog">
@@ -65,50 +67,59 @@
 
             <!-- HEADER MAPPING -->
             <div v-if="uploadstatus === 2" class="row">
-              <div class="col-5">
-                <div v-for="header in rawheaders" :key="header" class="m-2">
-                  <button class="btn btn-secondary" disabled>
-                    {{ header }}
-                  </button>
-                </div>
-              </div>
-              <div class="col-2">
-                <div v-for="header in rawheaders" :key="header" class="m-3">
-                  <i class="bi bi-arrow-right-circle-fill m-1"></i>
-                </div>
-              </div>
-              <div class="col-5">
-                <div v-for="header in csvheaders" :key="header">
-                  <div class="dropdown m-2">
-                    <button
-                      class="btn btn-secondary dropdown-toggle"
-                      type="button"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
-                    >
-                      {{ header }}
+              <table class="table table-borderless">
+                <thead>
+                  <tr>
+                    <th scope="col">Uploaded Headers</th>
+                    <th scope="col"></th>
+                    <th scope="col">Approved Headers</th>
+                  </tr>
+                </thead>
+                <tbody class="table-group-divider">
+                  <tr
+                    v-for="(approvedheader, uploadedheader) in headermap"
+                    :key="approvedheader"
+                  >
+                    <button class="btn btn-secondary" disabled>
+                      {{ uploadedheader }}
                     </button>
-                    <ul class="dropdown-menu">
-                      <li v-for="trueheader in trueheaders" :key="trueheader">
-                        <div
-                          class="dropdown-item"
-                          @click="headerchange(trueheader, header)"
+                    <td><i class="bi bi-arrow-right-circle-fill"></i></td>
+                    <td>
+                      <div class="dropdown">
+                        <button
+                          class="btn btn-secondary dropdown-toggle"
+                          type="button"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
                         >
-                          {{ trueheader }}
-                        </div>
-                      </li>
-                    </ul>
-                    <i
-                      v-if="this.trueheaders.includes(header)"
-                      class="bi bi-check-circle-fill text-success ms-2"
-                    ></i>
-                    <i
-                      v-if="!this.trueheaders.includes(header)"
-                      class="bi bi-x-circle-fill text-danger ms-2"
-                    ></i>
-                  </div>
-                </div>
-              </div>
+                          {{ approvedheader }}
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li
+                            v-for="trueheader in trueheaders"
+                            :key="trueheader"
+                          >
+                            <div
+                              class="dropdown-item"
+                              @click="headerchange(trueheader, uploadedheader)"
+                            >
+                              {{ trueheader }}
+                            </div>
+                          </li>
+                        </ul>
+                        <i
+                          v-if="this.trueheaders.includes(approvedheader)"
+                          class="bi bi-check-circle-fill text-success ms-2"
+                        ></i>
+                        <i
+                          v-if="!this.trueheaders.includes(approvedheader)"
+                          class="bi bi-x-circle-fill text-danger ms-2"
+                        ></i>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <div v-if="uploadstatus === 3">
@@ -248,6 +259,7 @@ export default {
       uploadedFileName: "",
       editing: [],
       uploadstatus: 0,
+      headermap: {},
     };
   },
   computed: {},
@@ -256,6 +268,9 @@ export default {
       console.log("wow");
     },
     headerchange(newheader, oldheader) {
+      console.log("head", newheader, oldheader);
+      console.log("head2", oldheader);
+      this.headermap[oldheader] = newheader;
       var newdata = [];
       this.csvdata.forEach((row) => {
         var newObject = {};
@@ -309,12 +324,19 @@ export default {
               this.csvdata = results.data;
               this.rawheaders = results.meta.fields;
               this.rawdata = results.data;
+              this.headermapping();
 
               console.log(results);
             }.bind(this),
           });
         }
       }
+    },
+    headermapping() {
+      this.rawheaders.forEach((header) => {
+        this.headermap[header] =
+          this.trueheaders.indexOf(header) !== -1 ? header : "";
+      });
     },
     isFileTypeValid(fileExtention) {
       if (this.accept.split(",").includes(fileExtention)) {
