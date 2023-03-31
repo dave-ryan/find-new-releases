@@ -299,27 +299,8 @@ export default {
       console.log("wow");
     },
     headerchange(newheader, oldheader) {
-      console.log("head", newheader, oldheader);
-      console.log("head2", oldheader);
       this.headermap[oldheader] = newheader;
-      var newdata = [];
-      this.csvdata.forEach((row) => {
-        var newObject = {};
-        for (let key in row) {
-          if (key === oldheader) {
-            newObject[newheader] = row[key];
-          } else {
-            newObject[key] = row[key];
-          }
-        }
-        console.log(row, newObject);
-        newdata.push(newObject);
-      });
-
-      this.csvdata = newdata;
-
-      console.log("all done", this.csvdata);
-
+      this.headerRefresh();
       this.csvheaders = this.csvheaders.map((header) => {
         if (header === oldheader) {
           return newheader;
@@ -365,9 +346,17 @@ export default {
     },
     headermapping() {
       this.rawheaders.forEach((header) => {
-        this.headermap[header] =
-          this.trueheaders.indexOf(header) !== -1 ? header : "";
+        this.headermap[header] = "";
+        this.trueheaders.forEach((theader) => {
+          if (
+            header.toLowerCase().replace(/\s/g, "") ===
+            theader.toLowerCase().replace(/\s/g, "")
+          ) {
+            this.headermap[header] = theader;
+          }
+        });
       });
+      this.headerRefresh();
     },
     isFileTypeValid(fileExtention) {
       if (this.accept.split(",").includes(fileExtention)) {
@@ -376,7 +365,25 @@ export default {
         this.errors.push(`File type should be ${this.accept}`);
       }
     },
+    headerRefresh() {
+      var newdata = [];
+      this.csvdata.forEach((row) => {
+        var newObject = {};
+        for (let key in row) {
+          for (let key2 in this.headermap) {
+            if (key === key2) {
+              newObject[this.headermap[key]] = row[key];
+            } else {
+              newObject[key] = row[key];
+            }
+          }
+        }
+        newdata.push(newObject);
+      });
+      this.csvdata = newdata;
+    },
   },
+
   directives: {
     focus: {
       inserted(el) {
