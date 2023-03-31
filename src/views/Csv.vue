@@ -16,12 +16,13 @@
                 @change="handleFileChange($event)"
                 accept=".csv"
                 id="csvUpload"
+                v-focus
               />
             </form>
             <button class="btn btn-sm btn-danger m-1" @click="clear">
               clear
             </button>
-            <div class="font-monospace">{{ uploadedFileName }}</div>
+            <div class="font-monospace mt-3">{{ uploadedFileName }}</div>
           </div>
         </div>
       </div>
@@ -29,28 +30,53 @@
       <div class="col-2"></div>
     </div>
 
-    <transition name="upload">
-      <div class="row">
-        <div class="col-12">
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col" v-for="header in csvheaders" :key="header">
-                  {{ header }}
-                </th>
-              </tr>
-            </thead>
-            <tbody class="table-group-divider">
-              <tr v-for="row in csvdata" :key="row.ExternalId" class="mt-3">
-                <td v-for="datacell in row" :key="datacell">
-                  {{ datacell }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <div class="row mt-5">
+      <div class="col-12">
+        <table class="table table-bordered table-hover">
+          <thead>
+            <tr>
+              <th scope="col" v-for="header in csvheaders" :key="header">
+                {{ header }}
+              </th>
+            </tr>
+          </thead>
+          <tbody class="table-group-divider">
+            <tr
+              v-for="(row, index) in csvdata"
+              :key="row.ExternalId"
+              class="mt-3"
+            >
+              <td>
+                <!-- <clicktoedit :value="row.FirstName" /> -->
+                <input
+                  v-if="this.editing === `${index}, FirstName`"
+                  v-model="row.FirstName"
+                  type="text"
+                  @blur="editing = false"
+                  @keyup.enter="editing = false"
+                  v-focus
+                />
+                <div
+                  v-if="this.editing !== `${index}, FirstName`"
+                  @click="this.editing = `${index}, FirstName`"
+                >
+                  {{ row.FirstName }}
+                </div>
+              </td>
+              <td>
+                {{ row.LastName }}
+              </td>
+              <td>
+                {{ row.Email }}
+              </td>
+              <td>
+                {{ row.ExternalId }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </transition>
+    </div>
     <!-- FAQ Modal -->
     <div
       class="modal fade"
@@ -117,10 +143,19 @@ export default {
       csvheaders: [],
       csvdata: [],
       uploadedFileName: "",
+      editing: [],
     };
   },
   computed: {},
   methods: {
+    qtest() {
+      console.log(this.editing);
+      console.log(JSON.parse(JSON.stringify(this.editing)));
+      console.log([0, "FirstName"]);
+      if (JSON.parse(JSON.stringify(this.editing)) === [0, "FirstName"]) {
+        console.log("wow");
+      }
+    },
     clear() {
       this.csvdata = [];
       this.csvheaders = [];
@@ -149,19 +184,20 @@ export default {
         }
       }
     },
-    updateJSON(event) {
-      let str = event.target.result;
-      let json = JSON.parse(str);
-      // console.log("string", str);
-      // console.log("json", json);
-      this.downloadedArtists = json;
-    },
     isFileTypeValid(fileExtention) {
       if (this.accept.split(",").includes(fileExtention)) {
         console.log("File type is valid");
       } else {
         this.errors.push(`File type should be ${this.accept}`);
       }
+    },
+  },
+  directives: {
+    focus: {
+      inserted(el) {
+        el.focus();
+        console.log(el);
+      },
     },
   },
 };
