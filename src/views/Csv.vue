@@ -48,6 +48,11 @@
             ></button>
           </div>
           <div class="modal-body">
+            <span
+              v-if="errorCount > 0 && uploadstatus === 3"
+              class="text-danger"
+              >Errors: {{ errorCount }}</span
+            >
             <!-- UPLOAD START -->
             <div v-if="uploadstatus === 1">
               <form class="mt-4">
@@ -147,6 +152,7 @@
               </table>
             </div>
 
+            <!-- DATA MANIPULATION -->
             <div v-if="uploadstatus === 3">
               <table class="table table-bordered table-hover">
                 <thead>
@@ -164,7 +170,7 @@
                     class="mt-3"
                   >
                     <td>{{ index + 1 }}</td>
-                    <td>
+                    <td @click="this.editing = `${index}, FirstName`">
                       <input
                         class="form-control"
                         v-if="this.editing === `${index}, FirstName`"
@@ -174,14 +180,11 @@
                         @keyup.enter="this.editing = false"
                         v-focus
                       />
-                      <div
-                        v-if="this.editing !== `${index}, FirstName`"
-                        @click="this.editing = `${index}, FirstName`"
-                      >
+                      <div v-if="this.editing !== `${index}, FirstName`">
                         {{ row.FirstName }}
                       </div>
                     </td>
-                    <td>
+                    <td @click="this.editing = `${index}, LastName`">
                       <input
                         class="form-control"
                         v-if="this.editing === `${index}, LastName`"
@@ -191,14 +194,11 @@
                         @keyup.enter="this.editing = false"
                         v-focus
                       />
-                      <div
-                        v-if="this.editing !== `${index}, LastName`"
-                        @click="this.editing = `${index}, LastName`"
-                      >
+                      <div v-if="this.editing !== `${index}, LastName`">
                         {{ row.LastName }}
                       </div>
                     </td>
-                    <td>
+                    <td @click="this.editing = `${index}, Email`">
                       <input
                         class="form-control"
                         v-if="this.editing === `${index}, Email`"
@@ -208,14 +208,11 @@
                         @keyup.enter="this.editing = false"
                         v-focus
                       />
-                      <div
-                        v-if="this.editing !== `${index}, Email`"
-                        @click="this.editing = `${index}, Email`"
-                      >
+                      <div v-if="this.editing !== `${index}, Email`">
                         {{ row.Email }}
                       </div>
                     </td>
-                    <td>
+                    <td @click="this.editing = `${index}, ExternalId`">
                       <input
                         class="form-control"
                         v-if="this.editing === `${index}, ExternalId`"
@@ -225,10 +222,7 @@
                         @keyup.enter="this.editing = false"
                         v-focus
                       />
-                      <div
-                        v-if="this.editing !== `${index}, ExternalId`"
-                        @click="this.editing = `${index}, ExternalId`"
-                      >
+                      <div v-if="this.editing !== `${index}, ExternalId`">
                         {{ row.ExternalId }}
                       </div>
                     </td>
@@ -237,6 +231,8 @@
               </table>
             </div>
           </div>
+
+          <!-- MODAL FOOTER -->
           <div class="modal-footer">
             <button
               type="button"
@@ -284,16 +280,30 @@ export default {
     return {
       trueheaders: ["FirstName", "LastName", "Email", "ExternalId"],
       csvheaders: [],
-      csvdata: [],
+      csvdata: [{ firstname: "bob" }],
       rawheaders: [],
       rawdata: [],
       uploadedFileName: "",
       editing: [],
       uploadstatus: 0,
       headermap: {},
+      errors: 0,
     };
   },
-  computed: {},
+  computed: {
+    errorCount() {
+      let errors = 0;
+      this.csvdata.forEach((row) => {
+        for (let key in row) {
+          if (row[key] === "") {
+            errors += 1;
+          }
+        }
+      });
+      console.log(errors);
+      return errors;
+    },
+  },
   methods: {
     qtest() {
       console.log("wow");
@@ -357,13 +367,6 @@ export default {
         });
       });
       this.headerRefresh();
-    },
-    isFileTypeValid(fileExtention) {
-      if (this.accept.split(",").includes(fileExtention)) {
-        console.log("File type is valid");
-      } else {
-        this.errors.push(`File type should be ${this.accept}`);
-      }
     },
     headerRefresh() {
       var newdata = [];
