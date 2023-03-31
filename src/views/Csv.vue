@@ -4,30 +4,68 @@
       <div class="col-2"></div>
       <div class="col submission-column">
         <div class="row">
-          <div class="col-12"></div>
-          <div>
-            <form class="mt-4">
-              <label for="csvUpload" class="btn btn-lg btn-outline-primary">
-                Upload CSV
-              </label>
-              <input
-                type="file"
-                class="d-none input-group"
-                @change="handleFileChange($event)"
-                accept=".csv"
-                id="csvUpload"
-                v-focus
-              />
-            </form>
-            <button class="btn btn-sm btn-danger m-1" @click="clear">
-              clear
-            </button>
-            <div class="font-monospace mt-3">{{ uploadedFileName }}</div>
+          <div class="col-12">
+            <div>
+              <form class="mt-4">
+                <label for="csvUpload" class="btn btn-lg btn-outline-primary">
+                  Upload CSV
+                </label>
+                <input
+                  type="file"
+                  class="d-none input-group"
+                  @change="handleFileChange($event)"
+                  accept=".csv"
+                  id="csvUpload"
+                  v-focus
+                />
+              </form>
+              <button class="btn btn-sm btn-danger m-1" @click="clear">
+                clear
+              </button>
+              <div class="font-monospace mt-3">{{ uploadedFileName }}</div>
+              <div>{{ csvdata }}</div>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="col-2"></div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-12">
+        <h1>Headers</h1>
+        <div v-for="header in csvheaders" :key="header">
+          <div class="dropdown m-2">
+            <button
+              class="btn btn-secondary dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              {{ header }}
+            </button>
+            <ul class="dropdown-menu">
+              <li v-for="trueheader in trueheaders" :key="trueheader">
+                <div
+                  class="dropdown-item"
+                  @click="headerchange(trueheader, header)"
+                >
+                  {{ trueheader }}
+                </div>
+              </li>
+            </ul>
+            <i
+              v-if="this.trueheaders.includes(header)"
+              class="bi bi-check-circle-fill text-success ms-2"
+            ></i>
+            <i
+              v-if="!this.trueheaders.includes(header)"
+              class="bi bi-x-circle-fill text-danger ms-2"
+            ></i>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="row mt-5">
@@ -47,7 +85,6 @@
               class="mt-3"
             >
               <td>
-                <!-- <clicktoedit :value="row.FirstName" /> -->
                 <input
                   v-if="this.editing === `${index}, FirstName`"
                   v-model="row.FirstName"
@@ -77,18 +114,18 @@
         </table>
       </div>
     </div>
-    <!-- FAQ Modal -->
+    <!--  Modal -->
     <div
       class="modal fade"
-      id="faqmodal"
+      id="modal"
       tabindex="-1"
-      aria-labelledby="faqmodalLabel"
+      aria-labelledby="modalLabel"
       aria-hidden="true"
     >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h1 class="modal-title fs-5" id="faqmodalLabel">FAQ</h1>
+            <h1 class="modal-title fs-5" id="modalLabel">Title</h1>
             <button
               type="button"
               class="btn-close"
@@ -96,26 +133,7 @@
               aria-label="Close"
             ></button>
           </div>
-          <div class="modal-body">
-            <p>
-              You will need to upload a .csv file with the columns
-              <strong>Artist</strong> and <strong>Album</strong>. You don't have
-              to use a header but you can if you want to.
-            </p>
-            <p>
-              If you are using MusicBee (you should) and you have a large
-              collection, you can use several tools. First is the
-              <a
-                href="https://www.getmusicbee.com/addons/plugins/49/additional-tagging-amp-reporting-tools/"
-                target="_blank"
-                >Additional Tagging & Reporting Tools Plugin</a
-              >. By using the Library Report feature, you can easily export a
-              .csv of all the artists and all the albums you have. If you want
-              to narrow this down to only artists that you actually listen to,
-              you can use the custom display fields to show many plays the
-              artist has. Use the formula how many plays per artist you have.
-            </p>
-          </div>
+          <div class="modal-body"></div>
           <div class="modal-footer">
             <button
               type="button"
@@ -140,8 +158,10 @@ import Papa from "papaparse";
 export default {
   data: function () {
     return {
+      trueheaders: ["FirstName", "LastName", "Email", "ExternalId"],
       csvheaders: [],
       csvdata: [],
+      rawdata: [],
       uploadedFileName: "",
       editing: [],
     };
@@ -149,12 +169,34 @@ export default {
   computed: {},
   methods: {
     qtest() {
-      console.log(this.editing);
-      console.log(JSON.parse(JSON.stringify(this.editing)));
-      console.log([0, "FirstName"]);
-      if (JSON.parse(JSON.stringify(this.editing)) === [0, "FirstName"]) {
-        console.log("wow");
-      }
+      console.log("wow");
+    },
+    headerchange(newheader, oldheader) {
+      var newdata = [];
+      this.csvdata.forEach((row) => {
+        var newObject = {};
+        for (let key in row) {
+          if (key === oldheader) {
+            newObject[newheader] = row[key];
+          } else {
+            newObject[key] = row[key];
+          }
+        }
+        console.log(row, newObject);
+        newdata.push(newObject);
+      });
+
+      this.csvdata = newdata;
+
+      console.log("all done", this.csvdata);
+
+      this.csvheaders = this.csvheaders.map((header) => {
+        if (header === oldheader) {
+          return newheader;
+        } else {
+          return header;
+        }
+      });
     },
     clear() {
       this.csvdata = [];
@@ -178,7 +220,13 @@ export default {
             complete: function (results) {
               this.csvdata = results.data;
               this.csvheaders = results.meta.fields;
+              this.rawdata = results.data;
+
               console.log(results);
+
+              document.getElementById("modal").classList.remove("hidden");
+
+              console.log(document.getElementById("modal"));
             }.bind(this),
           });
         }
