@@ -48,14 +48,17 @@
             ></button>
           </div>
           <div class="modal-body">
-            <span
+            <div
               v-if="errorCount > 0 && uploadstatus === 3"
-              class="text-danger"
-              >Errors: {{ errorCount }}</span
+              class="text-danger mb-3"
             >
+              <i class="bi bi-exclamation-triangle-fill text-danger"> </i>
+              Errors: {{ errorCount }}
+              <i class="bi bi-exclamation-triangle-fill text-danger"> </i>
+            </div>
             <!-- UPLOAD START -->
             <div v-if="uploadstatus === 1">
-              <form class="mt-4">
+              <form class="mt-4 mb-4">
                 <label for="csvUpload" class="btn btn-lg btn-outline-primary">
                   Upload CSV
                 </label>
@@ -69,7 +72,7 @@
                 />
               </form>
               <div v-if="uploadedFileName.length > 0">
-                <h3 class="mt-4 mb-2">Preview</h3>
+                <h3 class="mb-2">Preview</h3>
                 <table class="table table-bordered table-hover">
                   <thead>
                     <tr>
@@ -170,7 +173,10 @@
                     class="mt-3"
                   >
                     <td>{{ index + 1 }}</td>
-                    <td @click="this.editing = `${index}, FirstName`">
+                    <td
+                      @click="this.editing = `${index}, FirstName`"
+                      :class="row.FirstName === '' ? 'table-danger' : ''"
+                    >
                       <input
                         class="form-control"
                         v-if="this.editing === `${index}, FirstName`"
@@ -250,18 +256,14 @@
             >
               Next
             </button>
-            <a
-              href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-              target="_blank"
+            <button
+              type="button"
+              class="btn btn-success"
+              v-if="this.uploadstatus === 3"
+              :disabled="errorCount > 0"
             >
-              <button
-                type="button"
-                class="btn btn-success"
-                v-if="this.uploadstatus === 3"
-              >
-                Complete Feed Upload!
-              </button>
-            </a>
+              Complete Feed Upload!
+            </button>
           </div>
         </div>
       </div>
