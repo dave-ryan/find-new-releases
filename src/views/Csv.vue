@@ -190,7 +190,10 @@
                         {{ row.FirstName }}
                       </div>
                     </td>
-                    <td @click="this.editing = `${index}, LastName`">
+                    <td
+                      @click="this.editing = `${index}, LastName`"
+                      :class="row.LastName === '' ? 'table-danger' : ''"
+                    >
                       <input
                         class="form-control"
                         v-if="this.editing === `${index}, LastName`"
@@ -204,7 +207,10 @@
                         {{ row.LastName }}
                       </div>
                     </td>
-                    <td @click="this.editing = `${index}, Email`">
+                    <td
+                      @click="this.editing = `${index}, Email`"
+                      :class="row.Email === '' ? 'table-danger' : ''"
+                    >
                       <input
                         class="form-control"
                         v-if="this.editing === `${index}, Email`"
@@ -218,7 +224,10 @@
                         {{ row.Email }}
                       </div>
                     </td>
-                    <td @click="this.editing = `${index}, ExternalId`">
+                    <td
+                      @click="this.editing = `${index}, ExternalId`"
+                      :class="row.ExternalId === '' ? 'table-danger' : ''"
+                    >
                       <input
                         class="form-control"
                         v-if="this.editing === `${index}, ExternalId`"
