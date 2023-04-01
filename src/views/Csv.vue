@@ -270,6 +270,7 @@
               class="btn btn-success"
               v-if="this.uploadstatus === 3"
               :disabled="errorCount > 0"
+              @click="saveFile()"
             >
               Complete Feed Upload!
             </button>
@@ -284,7 +285,6 @@
 
 <script>
 import Papa from "papaparse";
-// import { saveAs } from "file-saver";
 
 export default {
   data: function () {
@@ -395,6 +395,26 @@ export default {
         newdata.push(newObject);
       });
       this.csvdata = newdata;
+    },
+    saveFile() {
+      var newdata = [];
+      this.csvdata.forEach((row) => {
+        var newObject = {};
+        for (let key in row) {
+          if (this.trueheaders.includes(key)) {
+            newObject[key] = row[key];
+          }
+        }
+        newdata.push(newObject);
+      });
+      console.log(newdata);
+      console.log(Papa.unparse(newdata));
+
+      var FileSaver = require("file-saver");
+      var blob = new Blob([Papa.unparse(newdata)], {
+        type: "text/csv;charset=utf-8;",
+      });
+      FileSaver.saveAs(blob, "mappedData.csv");
     },
   },
 
