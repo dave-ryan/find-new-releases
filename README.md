@@ -1,5 +1,3 @@
-A site for finding new albums for any artist in your collection. You can search individually or in a batch via a `csv` file. Uses Discogs' public API. 
-
 ## Project setup
 ```
 npm install
