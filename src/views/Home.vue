@@ -1,8 +1,9 @@
 <template>
   <div class="container text-center mt-5">
+    <!-- Info/Tools -->
     <div class="row">
       <div class="col-2"></div>
-      <div class="col submission-column">
+      <div class="col">
         <div class="row">
           <div class="col-12">
             <transition name="right">
@@ -80,7 +81,7 @@
             </transition>
             <transition name="left">
               <div v-if="!downloadStarted">
-                <form class="mt-2">
+                <form class="m-3">
                   <label for="jsonUpload" class="btn btn-outline-secondary">
                     Upload JSON from previous search
                   </label>
@@ -96,134 +97,131 @@
             </transition>
           </div>
         </div>
-
-        <transition name="upload">
-          <div v-if="logs.length > 0" id="controls">
-            <div class="row mb-3">
-              <div class="col">
-                <div class="form-check form-switch form-check-inline">
-                  <label class="form-check-label" for="albumcheckbox"
-                    >Album Art</label
-                  >
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="albumcheckbox"
-                    checked
-                    v-model="displayAlbums"
-                  />
-                </div>
-              </div>
-              <div class="col align-middle">
-                <div class="form-check form-switch form-check-inline">
-                  <label class="form-check-label" for="collectedcheckbox"
-                    >Collected Albums</label
-                  >
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    id="collectedcheckbox"
-                    checked
-                    v-model="displayCollected"
-                  />
-                </div>
-              </div>
-              <div class="col">
-                <div class="input-group-sm input-group">
-                  <span class="input-group-text" id="basic-addon1"
-                    >Released Since</span
-                  >
-                  <input
-                    v-model="filteredYear"
-                    type="number"
-                    class="form-control"
-                    aria-label="Year"
-                    aria-describedby="basic-addon1"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="row logs_and_errors mb-3">
-              <div class="col-6 bg-light font-monospace p-1 rounded-start">
-                <div class="border-bottom border-dark">Logs:</div>
-                <div class="loggybox" id="logs-div">
-                  <div v-for="(log, index) in logs" :key="index">
-                    {{ log }}
-                  </div>
-                </div>
-              </div>
-
-              <div
-                class="col-6 bg-dark text-danger font-monospace p-1 rounded-end"
-              >
-                <div class="border-bottom border-light">Errors:</div>
-                <div class="loggybox p-0" id="errors-div">
-                  <div v-for="(error, index) in errors" :key="index">
-                    {{ error.message }}
-                    <a
-                      :href="`https://www.discogs.com/search/?q=${error.artist.replace(
-                        /\s/g,
-                        '+'
-                      )}&type=all`"
-                      target="_blank"
-                      v-if="error.artist"
-                      >(manual search)
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row mb-5">
-              <div class="col">
-                <button
-                  class="btn btn-success"
-                  type="button"
-                  @click="downloadJSON"
-                >
-                  Download Results
-                </button>
-              </div>
-              <div class="col">
-                <button
-                  class="btn btn-danger"
-                  type="button"
-                  @click="clearResults"
-                >
-                  Clear Results
-                </button>
-              </div>
-            </div>
-            <div class="row mb-5" v-if="downloadComplete && downloadStarted">
-              <div class="col">
-                <form @submit.prevent="discogsQuery(query.toLowerCase())">
-                  <div class="input-group">
-                    <span class="input-group-text"
-                      >Individual Artist Search</span
-                    >
-                    <input
-                      type="text"
-                      v-model="query"
-                      class="form-control"
-                      id="queryinput"
-                      placeholder=""
-                    />
-                    <button class="btn btn-outline-primary" type="submit">
-                      Search!
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </transition>
       </div>
-
       <div class="col-2"></div>
     </div>
+
+    <div class="row mb-3">
+      <div class="col">
+        <div class="form-check form-switch form-check-inline">
+          <label class="form-check-label" for="logCheckbox">Display Logs</label>
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="logCheckbox"
+            v-model="displayLogs"
+          />
+        </div>
+      </div>
+      <div class="col">
+        <div class="form-check form-switch form-check-inline">
+          <label class="form-check-label" for="albumcheckbox">Album Art</label>
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="albumcheckbox"
+            checked
+            v-model="displayAlbums"
+          />
+        </div>
+      </div>
+      <div class="col">
+        <div class="form-check form-switch form-check-inline">
+          <label class="form-check-label" for="collectedcheckbox"
+            >Collected Albums</label
+          >
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="collectedcheckbox"
+            checked
+            v-model="displayCollected"
+          />
+        </div>
+      </div>
+      <div class="col">
+        <div class="input-group-sm input-group">
+          <span class="input-group-text" id="basic-addon1">Released Since</span>
+          <input
+            v-model="filteredYear"
+            type="number"
+            class="form-control"
+            aria-label="Year"
+            aria-describedby="basic-addon1"
+          />
+        </div>
+      </div>
+    </div>
+
+    <transition name="right">
+      <div v-if="displayLogs" class="row logs_and_errors mb-3">
+        <div class="col-6 bg-light font-monospace p-1 rounded-start">
+          <div class="border-bottom border-dark">Logs:</div>
+          <div class="loggybox" id="logs-div">
+            <div v-for="(log, index) in logs" :key="index">
+              {{ log }}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-6 bg-dark text-danger font-monospace p-1 rounded-end">
+          <div class="border-bottom border-light">Errors:</div>
+          <div class="loggybox p-0" id="errors-div">
+            <div v-for="(error, index) in errors" :key="index">
+              {{ error.message }}
+              <a
+                :href="`https://www.discogs.com/search/?q=${error.artist.replace(
+                  /\s/g,
+                  '+'
+                )}&type=all`"
+                target="_blank"
+                v-if="error.artist"
+                >(manual search)
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="upload">
+      <div v-if="computedFiltered.length > 0" class="row mb-5">
+        <div class="col">
+          <button class="btn btn-success" type="button" @click="downloadJSON">
+            Download Results
+          </button>
+        </div>
+        <div class="col">
+          <button class="btn btn-danger" type="button" @click="clearResults">
+            Clear Results
+          </button>
+        </div>
+      </div>
+    </transition>
+    <div class="row mb-5" v-if="downloadComplete && downloadStarted">
+      <div class="col">
+        <form @submit.prevent="discogsQuery(query.toLowerCase())">
+          <div class="input-group">
+            <span class="input-group-text">Individual Artist Search</span>
+            <input
+              type="text"
+              v-model="query"
+              class="form-control"
+              id="queryinput"
+              placeholder=""
+            />
+            <button class="btn btn-outline-primary" type="submit">
+              Search!
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Albums -->
     <transition name="upload">
       <div class="row" v-if="computedFiltered.length > 0">
         <div class="col-12">
@@ -438,6 +436,7 @@ export default {
       downloadComplete: false,
       displayAlbums: true,
       displayCollected: true,
+      displayLogs: false,
       readyToDownloadInfo: false,
       queryCount: 0,
       filteredYear: 1900,
