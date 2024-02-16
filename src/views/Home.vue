@@ -202,6 +202,17 @@
             Clear Results
           </button>
         </div>
+        <div class="col">
+          <div class="input-group">
+            <span class="input-group-text">Custom Search URL</span>
+            <input
+              type="text"
+              v-model="customSearchUrl"
+              class="form-control"
+              placeholder=""
+            />
+          </div>
+        </div>
       </div>
     </transition>
     <div class="row mb-5" v-if="downloadComplete && downloadStarted">
@@ -236,6 +247,7 @@
                 <th scope="col">Year</th>
                 <th scope="col">Id</th>
                 <th scope="col" v-if="displayAlbums">Cover</th>
+                <th scope="col" v-if="customSearchUrl">Search Link</th>
               </tr>
             </thead>
             <tbody class="table-group-divider">
@@ -246,11 +258,11 @@
                   class="mt-3"
                   :class="{ collected: album.collected }"
                 >
-                  <td v-if="album.title">
-                    {{ album.title.split(" - ")[0] }}
+                  <td>
+                    {{ snippedArtist(album?.title) }}
                   </td>
-                  <td v-if="album.title">
-                    {{ album.title.split(" - ")[1] }}
+                  <td>
+                    {{ snippedAlbum(album?.title) }}
                   </td>
                   <td>
                     {{ album.year }}
@@ -273,6 +285,19 @@
                     >
                       <img :src="album.thumb" alt="" class="album" />
                     </a>
+                  </td>
+                  <td v-if="customSearchUrl.length > 0">
+                    <a
+                      :href="
+                        '//' +
+                        customSearchUrl +
+                        snippedArtist(album?.title).replace(/ /g, '+') +
+                        '+' +
+                        snippedAlbum(album?.title).replace(/ /g, '+')
+                      "
+                      target="_blank"
+                      >Go!</a
+                    >
                   </td>
                 </tr>
               </template>
@@ -425,6 +450,7 @@ import Papa from "papaparse";
 export default {
   data: function () {
     return {
+      customSearchUrl: "",
       query: "",
       errors: [],
       errorsDiv: null,
@@ -459,6 +485,12 @@ export default {
     },
   },
   methods: {
+    snippedArtist(artistAlbumString) {
+      return artistAlbumString?.split(" - ")[0];
+    },
+    snippedAlbum(artistAlbumString) {
+      return artistAlbumString?.split(" - ")[1];
+    },
     musicCollectionUpload(e) {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0],
@@ -588,7 +620,7 @@ export default {
             //to avoid the wrong artist showing up, we make sure it's the one we search for
             var selectedAlbums = response.data.results.filter((album) => {
               if (
-                album.title.split(" - ")[0].toUpperCase() ===
+                this.snippedArtist(album.title).toUpperCase() ===
                 artist.toUpperCase()
               ) {
                 return album;
@@ -617,7 +649,7 @@ export default {
               this.uploadedAlbums.forEach((upAlbum) => {
                 if (
                   upAlbum[1].toUpperCase() ===
-                  album.title.split(" - ")[1].toUpperCase()
+                  this.snippedAlbum(album.title).toUpperCase()
                 ) {
                   album.collected = true;
                 }
@@ -662,8 +694,8 @@ export default {
         console.log("?", artist);
         artist.forEach((album) => {
           let row = {
-            artist: album.title.split(" - ")[0],
-            album: album.title.split(" - ")[1],
+            artist: this.snippedArtist(album.title),
+            album: this.snippedAlbum(album.title),
             year: album.year,
             link: "https://www.discogs.com/master/" + album.master_id,
             master_id: album.master_id,
