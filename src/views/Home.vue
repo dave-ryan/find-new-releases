@@ -29,12 +29,12 @@
             <div v-if="!downloadStarted">
               <form class="mt-4">
                 <label for="csvUpload" class="btn btn-lg btn-outline-primary">
-                  Upload CSV
+                  Upload MusicBee CSV
                 </label>
                 <input
                   type="file"
                   class="d-none input-group"
-                  @change="handleFileChange($event)"
+                  @change="musicCollectionUpload($event)"
                   accept=".csv"
                   id="csvUpload"
                 />
@@ -82,15 +82,18 @@
             <transition name="left">
               <div v-if="!downloadStarted">
                 <form class="m-3">
-                  <label for="jsonUpload" class="btn btn-outline-secondary">
-                    Upload JSON from previous search
+                  <label
+                    for="previousSearchUpload"
+                    class="btn btn-outline-secondary"
+                  >
+                    Upload the results from previous search
                   </label>
                   <input
                     type="file"
                     class="d-none input-group"
-                    @change="handleFileChange($event)"
-                    accept=".json"
-                    id="jsonUpload"
+                    @change="previousSearchUpload($event)"
+                    accept=".csv"
+                    id="previousSearchUpload"
                   />
                 </form>
               </div>
@@ -190,7 +193,7 @@
     <transition name="upload">
       <div v-if="computedFiltered.length > 0" class="row mb-5">
         <div class="col">
-          <button class="btn btn-success" type="button" @click="downloadJSON">
+          <button class="btn btn-success" type="button" @click="downloadCSV">
             Download Results
           </button>
         </div>
@@ -418,7 +421,6 @@
 <script>
 import axios from "axios";
 import Papa from "papaparse";
-import { saveAs } from "file-saver";
 
 export default {
   data: function () {
@@ -457,7 +459,7 @@ export default {
     },
   },
   methods: {
-    handleFileChange(e) {
+    musicCollectionUpload(e) {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0],
           fileSize = Math.round((file.size / 1024 / 1024) * 100) / 100,
@@ -473,32 +475,42 @@ export default {
             complete: function (results) {
               this.uploadedAlbums = results.data;
               this.readyToDownloadInfo = true;
-              // console.log(this.uploadedAlbums, "uploaded!");
-              // console.log("string", JSON.stringify(results.data));
-              // this.downloadEngine(results.data);
             }.bind(this),
           });
-        } else if (fileExtention === "json") {
-          // console.log(e.target.result);
-          // console.log("....", e.target.files);
-          let reader = new FileReader();
-          reader.onload = this.updateJSON;
-          reader.readAsText(file);
         }
       }
     },
-    updateJSON(event) {
-      let str = event.target.result;
-      let json = JSON.parse(str);
-      // console.log("string", str);
-      // console.log("json", json);
-      this.downloadedArtists = json;
-    },
-    isFileTypeValid(fileExtention) {
-      if (this.accept.split(",").includes(fileExtention)) {
-        console.log("File type is valid");
-      } else {
-        this.errors.push(`File type should be ${this.accept}`);
+    previousSearchUpload(e) {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0],
+          fileSize = Math.round((file.size / 1024 / 1024) * 100) / 100,
+          fileExtention = file.name.split(".").pop(),
+          fileName = file.name.split(".").shift();
+        this.uploadedFileName = fileName + "." + fileExtention;
+        console.log(fileSize, fileExtention, fileName);
+
+        if (fileExtention === "csv") {
+          Papa.parse(file, {
+            skipEmptyLines: true,
+            header: true,
+            complete: function (results) {
+              this.downloadedArtists = [];
+              var finalData = [{ albums: [] }];
+
+              results.data?.forEach((album) => {
+                let albumObj = {
+                  title: `${album.artist} - ${album.album}`,
+                  year: album.year,
+                  master_id: album.master_id,
+                  thumb: album.thumb,
+                };
+                finalData[0].albums.push(albumObj);
+              });
+
+              this.downloadedArtists = finalData;
+            }.bind(this),
+          });
+        }
       }
     },
     duplicationCheck: function (artist) {
@@ -644,11 +656,27 @@ export default {
         }, 200);
       }
     },
-    downloadJSON() {
-      var fileToSave = new Blob([JSON.stringify(this.downloadedArtists)], {
-        type: "application/json",
+    downloadCSV() {
+      var csv = [];
+      this.computedFiltered.forEach((artist) => {
+        console.log("?", artist);
+        artist.forEach((album) => {
+          let row = {
+            artist: album.title.split(" - ")[0],
+            album: album.title.split(" - ")[1],
+            year: album.year,
+            link: "https://www.discogs.com/master/" + album.master_id,
+            master_id: album.master_id,
+            thumb: album.thumb,
+          };
+          csv.push(row);
+        });
       });
-      saveAs(fileToSave, "Music Results");
+      var FileSaver = require("file-saver");
+      var blob = new Blob([Papa.unparse(csv)], {
+        type: "text/csv;charset=utf-8;",
+      });
+      FileSaver.saveAs(blob, "Album-Report.csv");
     },
 
     clearResults: function () {
