@@ -9,9 +9,7 @@
               <div v-if="!downloadStarted">
                 <h2>
                   Upload A
-                  <router-link to="/csv" class="btn btn-outline-primary btn-sm"
-                    >.csv</router-link
-                  >
+                  <router-link to="/csv" class="text-dark">.csv</router-link>
                   File Of Your Collection
                 </h2>
                 <h2>See What Albums You've Been Missing</h2>
@@ -47,7 +45,7 @@
           <transition name="right">
             <div v-if="readyToDownloadInfo && !downloadStarted">
               <button
-                class="btn btn-primary fw-bold mt-1"
+                class="btn btn-primary btn-lg fw-bold mt-1"
                 @click="startDownload()"
               >
                 Begin Download
@@ -272,7 +270,7 @@
                       "
                       target="_blank"
                     >
-                      <img :src="album.thumb" alt="" />
+                      <img :src="album.thumb" alt="" class="album" />
                     </a>
                   </td>
                 </tr>
@@ -345,7 +343,7 @@
   text-decoration: line-through;
 }
 
-img {
+.album {
   height: 125px;
   width: 125px;
 }
