@@ -10,7 +10,7 @@
               <div v-if="!downloadStarted">
                 <h2>
                   Upload A
-                  <router-link to="/csv" class="text-dark">.csv</router-link>
+                  <span class="text-secondary">.csv</span>
                   File Of Your Collection
                 </h2>
                 <h2>See What Albums You've Been Missing</h2>
