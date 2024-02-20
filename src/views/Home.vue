@@ -250,7 +250,7 @@
                 <th scope="col" v-if="customSearchUrl">Search Link</th>
               </tr>
             </thead>
-            <tbody class="table-group-divider">
+            <tbody class="table-group-divider align-middle">
               <template v-for="artist in computedFiltered" :key="artist.artist">
                 <tr
                   v-for="album in artist"
