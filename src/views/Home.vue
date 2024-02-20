@@ -20,7 +20,7 @@
           <h2>See What Albums You've Been Missing</h2>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-5">
           <form>
             <label for="csvUpload" class="btn btn-lg btn-outline-primary">
               Upload MusicBee CSV
@@ -32,63 +32,112 @@
               accept=".csv"
               id="csvUpload"
             />
-            <span class="font-monospace" v-if="uploadedFileName.length > 0">
-              - {{ uploadedFileName }} -
-            </span>
-            <button
-              class="btn btn-primary btn-lg fw-bold"
-              @click="startDownload()"
-              :disabled="downloadStarted"
-              v-if="uploadedFileName.length > 0"
-            >
-              Begin Download
-            </button>
+            <transition name="fade">
+              <span v-if="uploadedFileName.length > 0">
+                <span class="font-monospace"> - {{ uploadedFileName }} - </span>
+                <button
+                  class="btn btn-primary btn-lg fw-bold"
+                  @click="startDownload()"
+                  :disabled="engineRunning || downloading"
+                >
+                  Begin Download
+                </button>
+              </span>
+            </transition>
           </form>
         </div>
 
-        <transition name="right">
-          <div v-if="displayLogs" class="row mb-3">
-            <div class="col-6 bg-light font-monospace p-1 rounded-start">
-              <div class="border-bottom border-dark">Logs:</div>
-              <div class="loggybox" id="logs-div">
-                <div v-for="(log, index) in logs" :key="index">
-                  {{ log }}
+        <div class="mb-5">
+          <transition name="right">
+            <div v-if="displayLogs" class="row mb-3">
+              <div class="col-6 bg-light font-monospace p-1 rounded-start">
+                <div class="border-bottom border-dark">Logs:</div>
+                <div class="loggybox" id="logs-div">
+                  <div v-for="(log, index) in logs" :key="index">
+                    {{ log }}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="col-6 bg-light text-danger font-monospace p-1 rounded-end"
+              >
+                <div class="border-bottom border-dark">Errors:</div>
+                <div class="loggybox p-0" id="errors-div">
+                  <div v-for="(error, index) in errors" :key="index">
+                    {{ error.message }} -
+                    <a
+                      :href="`https://www.discogs.com/search/?q=${error.artist.replace(
+                        /\s/g,
+                        '+'
+                      )}&type=all`"
+                      target="_blank"
+                      v-if="error.artist"
+                      >Find on Discogs
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <div
-              class="col-6 bg-light text-danger font-monospace p-1 rounded-end"
-            >
-              <div class="border-bottom border-dark">Errors:</div>
-              <div class="loggybox p-0" id="errors-div">
-                <div v-for="(error, index) in errors" :key="index">
-                  {{ error.message }} -
-                  <a
-                    :href="`https://www.discogs.com/search/?q=${error.artist.replace(
-                      /\s/g,
-                      '+'
-                    )}&type=all`"
-                    target="_blank"
-                    v-if="error.artist"
-                    >Find on Discogs
-                  </a>
-                </div>
-              </div>
+          </transition>
+          <div class="row justify-content-md-center">
+            <div class="col-md-auto">
+              <button
+                class="btn btn-sm btn-success m-2"
+                type="button"
+                @click="downloadCSV"
+                :disabled="
+                  engineRunning || downloading || computedFiltered.length < 1
+                "
+              >
+                Download Results
+              </button>
+            </div>
+            <div class="col-md-auto">
+              <button
+                class="btn btn-sm btn-danger m-2"
+                type="button"
+                @click="clearResults"
+                :disabled="
+                  engineRunning || downloading || computedFiltered.length < 1
+                "
+              >
+                Clear Results
+              </button>
+            </div>
+            <div class="col-md-auto">
+              <form>
+                <label
+                  for="previousSearchUpload"
+                  class="btn btn-sm btn-outline-secondary m-2"
+                >
+                  Upload Results From Previous Search
+                </label>
+                <input
+                  type="file"
+                  class="d-none input-group"
+                  @change="previousSearchUpload($event)"
+                  accept=".csv"
+                  id="previousSearchUpload"
+                  :disabled="engineRunning || downloading"
+                />
+              </form>
             </div>
           </div>
-        </transition>
+        </div>
 
-        <div class="row mt-5 mb-3">
+        <br />
+
+        <div class="row mb-5">
           <div class="col"></div>
           <div class="col-xs-10 col-sm-8 col-lg-6">
-            <form @submit.prevent="discogsQuery(query.toLowerCase())">
-              <fieldset :disabled="downloadStarted">
+            <form @submit.prevent="discogsQuery(searchInput.toLowerCase())">
+              <fieldset :disabled="engineRunning || downloading">
                 <div class="input-group">
                   <span class="input-group-text">Individual Artist Search</span>
                   <input
                     type="text"
-                    v-model="query"
+                    v-model="searchInput"
                     class="form-control"
                     id="queryinput"
                     placeholder=""
@@ -102,114 +151,80 @@
           </div>
           <div class="col"></div>
         </div>
-      </div>
-    </div>
 
-    <div class="row justify-content-md-center mb-3">
-      <div class="col-md-auto">
-        <div class="form-check form-switch form-check-inline">
-          <label class="form-check-label" for="logCheckbox">Display Logs</label>
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="logCheckbox"
-            checked
-            v-model="displayLogs"
-          />
+        <div class="row justify-content-md-center mt-5">
+          <div class="col-md-auto">
+            <div class="form-check form-switch form-check-inline">
+              <label class="form-check-label" for="logCheckbox"
+                >Display Logs</label
+              >
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="logCheckbox"
+                checked
+                v-model="displayLogs"
+              />
+            </div>
+          </div>
+          <div class="col-md-auto">
+            <div class="form-check form-switch form-check-inline">
+              <label class="form-check-label" for="albumcheckbox"
+                >Album Art</label
+              >
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="albumcheckbox"
+                checked
+                v-model="displayAlbums"
+              />
+            </div>
+          </div>
+          <div class="col-md-auto">
+            <div class="form-check form-switch form-check-inline">
+              <label class="form-check-label" for="collectedcheckbox"
+                >Collected Albums</label
+              >
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                id="collectedcheckbox"
+                checked
+                v-model="displayCollected"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="col-md-auto">
-        <div class="form-check form-switch form-check-inline">
-          <label class="form-check-label" for="albumcheckbox">Album Art</label>
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="albumcheckbox"
-            checked
-            v-model="displayAlbums"
-          />
-        </div>
-      </div>
-      <div class="col-md-auto">
-        <div class="form-check form-switch form-check-inline">
-          <label class="form-check-label" for="collectedcheckbox"
-            >Collected Albums</label
-          >
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="collectedcheckbox"
-            checked
-            v-model="displayCollected"
-          />
-        </div>
-      </div>
-      <div class="col-md-auto">
-        <div class="input-group-sm input-group">
-          <span class="input-group-text" id="basic-addon1"
-            >Year Released >
-          </span>
-          <input
-            v-model="filteredYear"
-            type="number"
-            class="form-control"
-            aria-label="Year"
-            aria-describedby="basic-addon1"
-          />
-        </div>
-      </div>
-    </div>
-
-    <div class="row justify-content-md-center mb-5">
-      <div class="col-md-auto">
-        <button
-          class="btn btn-sm btn-success"
-          type="button"
-          @click="downloadCSV"
-          :disabled="computedFiltered.length < 1"
-        >
-          Download Results
-        </button>
-      </div>
-      <div class="col-md-auto">
-        <button
-          class="btn btn-sm btn-danger"
-          type="button"
-          @click="clearResults"
-          :disabled="computedFiltered.length < 1"
-        >
-          Clear Results
-        </button>
-      </div>
-      <div class="col-md-auto">
-        <form>
-          <label
-            for="previousSearchUpload"
-            class="btn btn-sm btn-outline-secondary"
-          >
-            Upload Results From Previous Search
-          </label>
-          <input
-            type="file"
-            class="d-none input-group"
-            @change="previousSearchUpload($event)"
-            accept=".csv"
-            id="previousSearchUpload"
-          />
-        </form>
-      </div>
-      <div class="col-md-auto">
-        <div class="input-group-sm input-group">
-          <span class="input-group-text">Custom Search URL</span>
-          <input
-            type="text"
-            v-model="customSearchUrl"
-            class="form-control"
-            placeholder=""
-          />
+        <div class="row justify-content-md-center mb-3">
+          <div class="col-md-auto">
+            <div class="input-group-sm input-group">
+              <span class="input-group-text" id="basic-addon1"
+                >Year Released >
+              </span>
+              <input
+                v-model="filteredYear"
+                type="number"
+                class="form-control"
+                aria-label="Year"
+                aria-describedby="basic-addon1"
+              />
+            </div>
+          </div>
+          <div class="col-md-auto">
+            <div class="input-group-sm input-group">
+              <span class="input-group-text">Custom Search URL</span>
+              <input
+                type="text"
+                v-model="customSearchUrl"
+                class="form-control"
+                placeholder=""
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -225,8 +240,12 @@
                 <th scope="col">Album</th>
                 <th scope="col">Year</th>
                 <th scope="col">Id</th>
-                <th scope="col" v-if="displayAlbums">Cover</th>
-                <th scope="col" v-if="customSearchUrl">Search Link</th>
+                <transition name="fade">
+                  <th scope="col" v-if="displayAlbums">Cover</th>
+                </transition>
+                <transition name="fade">
+                  <th scope="col" v-if="customSearchUrl">Search Link</th>
+                </transition>
               </tr>
             </thead>
             <tbody class="table-group-divider align-middle">
@@ -255,30 +274,34 @@
                       >{{ album.id }}</a
                     >
                   </td>
-                  <td v-if="displayAlbums">
-                    <a
-                      :href="
-                        'https://www.discogs.com/master/' + album.master_id
-                      "
-                      target="_blank"
-                    >
-                      <img :src="album.thumb" alt="" class="album" />
-                    </a>
-                  </td>
-                  <td v-if="customSearchUrl.length > 0">
-                    <a
-                      :href="
-                        '//' +
-                        customSearchUrl +
-                        snippedArtist(album?.title).replace(/ /g, '+') +
-                        '+' +
-                        snippedAlbum(album?.title).replace(/ /g, '+')
-                      "
-                      target="_blank"
-                      class="btn btn-sm btn-secondary"
-                      >Find It!</a
-                    >
-                  </td>
+                  <transition name="fade">
+                    <td v-if="displayAlbums">
+                      <a
+                        :href="
+                          'https://www.discogs.com/master/' + album.master_id
+                        "
+                        target="_blank"
+                      >
+                        <img :src="album.thumb" alt="" class="album" />
+                      </a>
+                    </td>
+                  </transition>
+                  <transition name="fade">
+                    <td v-if="customSearchUrl.length > 0">
+                      <a
+                        :href="
+                          '//' +
+                          customSearchUrl +
+                          snippedArtist(album?.title).replace(/ /g, '+') +
+                          '+' +
+                          snippedAlbum(album?.title).replace(/ /g, '+')
+                        "
+                        target="_blank"
+                        class="btn btn-sm btn-secondary"
+                        >Find It!</a
+                      >
+                    </td>
+                  </transition>
                 </tr>
               </template>
             </tbody>
@@ -358,18 +381,12 @@
   max-height: 300px;
   overflow-y: auto;
 }
-
-.left-enter-active {
-  transition: all 0.3s ease-out;
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.7s ease-out;
 }
-
-.left-leave-active {
-  transition: all 0.5s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.left-enter-from,
-.left-leave-to {
-  transform: translateX(-50px);
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 
@@ -431,24 +448,24 @@ export default {
   data: function () {
     return {
       customSearchUrl: "",
-      query: "",
-      errors: [],
-      errorsDiv: null,
-      logs: [],
-      logsDiv: null,
       downloadedArtists: [],
-      searchedArtists: [],
-      uploadedFileName: "",
-      uploadedAlbums: [],
-      downloadStarted: false,
-      downloadComplete: false,
+      downloading: false,
       displayAlbums: true,
       displayCollected: true,
       displayLogs: true,
-      readyToDownloadInfo: false,
-      queryCount: 0,
+      engineRunning: false,
+      errors: [],
+      errorsDiv: null,
       filteredYear: 1900,
+      logs: [],
+      logsDiv: null,
       musicBeeFormula: "$Sum(<play count>, <album artist>)",
+      queryCount: 0,
+      readyToDownloadInfo: false,
+      searchInput: "",
+      searchedArtists: [],
+      uploadedFileName: "",
+      uploadedAlbums: [],
     };
   },
   computed: {
@@ -463,6 +480,10 @@ export default {
         });
       });
     },
+  },
+  mounted() {
+    this.logsDiv = document.getElementById("logs-div");
+    this.errorsDiv = document.getElementById("errors-div");
   },
   methods: {
     snippedArtist(artistAlbumString) {
@@ -533,24 +554,22 @@ export default {
       }
     },
     startDownload() {
-      this.downloadStarted = true;
-      this.downloadComplete = false;
+      this.engineRunning = true;
       this.downloadEngine();
     },
     downloadEngine: function () {
       if (this.queryCount < this.uploadedAlbums.length) {
-        // console.log(this.queryCount, this.uploadedAlbums.length);
         this.discogsQuery(this.uploadedAlbums[this.queryCount][0]);
         this.queryCount += 1;
       } else {
+        this.engineRunning = false;
         this.logs.push("Download Complete!");
         if (this.logs.length > 5) {
           this.scrolly(this.logsDiv);
+          this.scrolly(this.errorsDiv);
         }
-        this.downloadComplete = true;
         console.log("Uploaded Albums:", this.uploadedAlbums);
         console.log("Downloaded Albums:", this.downloadedArtists);
-        // this.logsDiv.scrollIntoView(false);
       }
     },
     scrolly(div) {
@@ -559,8 +578,8 @@ export default {
       }, 1050);
     },
     discogsQuery: function (artist) {
-      this.logsDiv = document.getElementById("logs-div");
-      this.errorsDiv = document.getElementById("errors-div");
+      this.searchInput = "";
+
       if (!this.duplicationCheck(artist)) {
         this.searchedArtists.push([artist, ""]);
         this.logs.push(`Downloading Info on '${artist}'...`);
@@ -568,11 +587,14 @@ export default {
           this.scrolly(this.logsDiv);
         }
 
-        var self = this;
-        setTimeout(function () {
-          self.downloadEngine();
-        }, 1000);
+        if (this.engineRunning) {
+          var self = this;
+          setTimeout(function () {
+            self.downloadEngine();
+          }, 1000);
+        }
 
+        this.downloading = true;
         axios
           .get(
             `https://api.discogs.com/database/search?type=master&artist=${artist.replace(
@@ -581,8 +603,7 @@ export default {
             )}&format=album&token=vwbBWENsiqyNVUgWWlunGyTKRxXHVSHJNHosZUyj`
           )
           .then((response) => {
-            // console.log("discogs response", response);
-            // this.queryCount += 1;
+            this.downloading = false;
 
             //check if it's unable to find anything
             if (response.data.results.length === 0) {
@@ -646,23 +667,19 @@ export default {
             this.downloadedArtists = this.downloadedArtists.sort((a, b) => {
               return a.artist > b.artist ? 1 : -1;
             });
-
-            //clear out the search (for single search)
-            if (artist === this.query) {
-              this.query = "";
-            }
           })
           .catch((errors) => {
+            this.downloading = false;
             this.errors.push(`ERROR! ${errors}`);
             if (this.errors.length > 5) {
               this.scrolly(this.errorsDiv);
             }
           });
       } else {
-        // console.log("dupe detected, and ignored");
+        this.errors.push(`Already downloaded info on '${artist}'`);
+        // small hiccup before next query
         self = this;
         setTimeout(function () {
-          // console.log("Executed after 1 second");
           self.downloadEngine();
         }, 200);
       }
@@ -697,8 +714,9 @@ export default {
         this.searchedArtists = [];
         this.logs = [];
         this.errors = [];
-        this.downloadStarted = false;
-        this.downloadComplete = false;
+        this.readyToDownloadInfo = false;
+        this.searchInput = "";
+        this.uploadedFileName = "";
       }
     },
   },
