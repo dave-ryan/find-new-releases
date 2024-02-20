@@ -296,7 +296,8 @@
                         snippedAlbum(album?.title).replace(/ /g, '+')
                       "
                       target="_blank"
-                      >Go!</a
+                      class="btn btn-sm btn-secondary"
+                      >Find It!</a
                     >
                   </td>
                 </tr>
