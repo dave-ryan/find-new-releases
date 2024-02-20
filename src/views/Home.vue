@@ -5,9 +5,7 @@
       <div class="col">
         <div class="mb-5">
           <h2>
-            Upload A
-            <span class="text-secondary">.csv</span>
-            File Of Your Collection
+            Upload Your Collection
             <button
               type="button"
               class="btn btn-sm btn-light"
