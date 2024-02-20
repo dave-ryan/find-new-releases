@@ -1,69 +1,89 @@
 <template>
-  <div class="container text-center mt-5">
+  <div class="container text-center mt-5 mb-5">
     <!-- Info/Tools -->
     <div class="row">
-      <div class="col-2"></div>
       <div class="col">
-        <div class="row">
-          <div class="col-12">
-            <transition name="right">
-              <div v-if="!downloadStarted">
-                <h2>
-                  Upload A
-                  <span class="text-secondary">.csv</span>
-                  File Of Your Collection
-                </h2>
-                <h2>See What Albums You've Been Missing</h2>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-light"
-                  data-bs-toggle="modal"
-                  data-bs-target="#faqmodal"
-                >
-                  What? I need help...
-                </button>
-              </div>
-            </transition>
-          </div>
-          <transition name="left">
-            <div v-if="!downloadStarted">
-              <form class="mt-4">
-                <label for="csvUpload" class="btn btn-lg btn-outline-primary">
-                  Upload MusicBee CSV
-                </label>
-                <input
-                  type="file"
-                  class="d-none input-group"
-                  @change="musicCollectionUpload($event)"
-                  accept=".csv"
-                  id="csvUpload"
-                />
-              </form>
-              <div class="font-monospace">{{ uploadedFileName }}</div>
-            </div>
-          </transition>
-
-          <transition name="right">
-            <div v-if="readyToDownloadInfo && !downloadStarted">
-              <button
-                class="btn btn-primary btn-lg fw-bold mt-1"
-                @click="startDownload()"
-              >
-                Begin Download
-              </button>
-            </div>
-          </transition>
-          <transition name="right">
-            <div v-if="!downloadStarted" class="mb-5"></div>
-          </transition>
+        <div class="mb-5">
+          <h2>
+            Upload A
+            <span class="text-secondary">.csv</span>
+            File Of Your Collection
+            <button
+              type="button"
+              class="btn btn-sm btn-light"
+              data-bs-toggle="modal"
+              data-bs-target="#faqmodal"
+            >
+              ?
+            </button>
+          </h2>
+          <h2>See What Albums You've Been Missing</h2>
         </div>
-        <div class="row">
-          <div class="col-12">
-            <transition name="left">
-              <form
-                v-if="!downloadStarted"
-                @submit.prevent="discogsQuery(query.toLowerCase())"
-              >
+
+        <div class="mb-3">
+          <form>
+            <label for="csvUpload" class="btn btn-lg btn-outline-primary">
+              Upload MusicBee CSV
+            </label>
+            <input
+              type="file"
+              class="d-none input-group"
+              @change="musicCollectionUpload($event)"
+              accept=".csv"
+              id="csvUpload"
+            />
+            <span class="font-monospace" v-if="uploadedFileName.length > 0">
+              - {{ uploadedFileName }} -
+            </span>
+            <button
+              class="btn btn-primary btn-lg fw-bold"
+              @click="startDownload()"
+              :disabled="downloadStarted"
+              v-if="uploadedFileName.length > 0"
+            >
+              Begin Download
+            </button>
+          </form>
+        </div>
+
+        <transition name="right">
+          <div v-if="displayLogs" class="row mb-3">
+            <div class="col-6 bg-light font-monospace p-1 rounded-start">
+              <div class="border-bottom border-dark">Logs:</div>
+              <div class="loggybox" id="logs-div">
+                <div v-for="(log, index) in logs" :key="index">
+                  {{ log }}
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="col-6 bg-light text-danger font-monospace p-1 rounded-end"
+            >
+              <div class="border-bottom border-dark">Errors:</div>
+              <div class="loggybox p-0" id="errors-div">
+                <div v-for="(error, index) in errors" :key="index">
+                  {{ error.message }} -
+                  <a
+                    :href="`https://www.discogs.com/search/?q=${error.artist.replace(
+                      /\s/g,
+                      '+'
+                    )}&type=all`"
+                    target="_blank"
+                    v-if="error.artist"
+                    >Find on Discogs
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </transition>
+
+        <div class="row mt-5 mb-3">
+          <div class="col"></div>
+          <div class="col-xs-10 col-sm-8 col-lg-6">
+            <form @submit.prevent="discogsQuery(query.toLowerCase())">
+              <fieldset :disabled="downloadStarted">
                 <div class="input-group">
                   <span class="input-group-text">Individual Artist Search</span>
                   <input
@@ -77,35 +97,16 @@
                     Search!
                   </button>
                 </div>
-              </form>
-            </transition>
-            <transition name="left">
-              <div v-if="!downloadStarted">
-                <form class="m-3">
-                  <label
-                    for="previousSearchUpload"
-                    class="btn btn-outline-secondary"
-                  >
-                    Upload the results from previous search
-                  </label>
-                  <input
-                    type="file"
-                    class="d-none input-group"
-                    @change="previousSearchUpload($event)"
-                    accept=".csv"
-                    id="previousSearchUpload"
-                  />
-                </form>
-              </div>
-            </transition>
+              </fieldset>
+            </form>
           </div>
+          <div class="col"></div>
         </div>
       </div>
-      <div class="col-2"></div>
     </div>
 
-    <div class="row mb-3">
-      <div class="col">
+    <div class="row justify-content-md-center mb-3">
+      <div class="col-md-auto">
         <div class="form-check form-switch form-check-inline">
           <label class="form-check-label" for="logCheckbox">Display Logs</label>
           <input
@@ -113,11 +114,12 @@
             type="checkbox"
             role="switch"
             id="logCheckbox"
+            checked
             v-model="displayLogs"
           />
         </div>
       </div>
-      <div class="col">
+      <div class="col-md-auto">
         <div class="form-check form-switch form-check-inline">
           <label class="form-check-label" for="albumcheckbox">Album Art</label>
           <input
@@ -130,7 +132,7 @@
           />
         </div>
       </div>
-      <div class="col">
+      <div class="col-md-auto">
         <div class="form-check form-switch form-check-inline">
           <label class="form-check-label" for="collectedcheckbox"
             >Collected Albums</label
@@ -145,9 +147,11 @@
           />
         </div>
       </div>
-      <div class="col">
+      <div class="col-md-auto">
         <div class="input-group-sm input-group">
-          <span class="input-group-text" id="basic-addon1">Released Since</span>
+          <span class="input-group-text" id="basic-addon1"
+            >Year Released >
+          </span>
           <input
             v-model="filteredYear"
             type="number"
@@ -159,79 +163,54 @@
       </div>
     </div>
 
-    <transition name="right">
-      <div v-if="displayLogs" class="row logs_and_errors mb-3">
-        <div class="col-6 bg-light font-monospace p-1 rounded-start">
-          <div class="border-bottom border-dark">Logs:</div>
-          <div class="loggybox" id="logs-div">
-            <div v-for="(log, index) in logs" :key="index">
-              {{ log }}
-            </div>
-          </div>
-        </div>
-
-        <div class="col-6 bg-dark text-danger font-monospace p-1 rounded-end">
-          <div class="border-bottom border-light">Errors:</div>
-          <div class="loggybox p-0" id="errors-div">
-            <div v-for="(error, index) in errors" :key="index">
-              {{ error.message }}
-              <a
-                :href="`https://www.discogs.com/search/?q=${error.artist.replace(
-                  /\s/g,
-                  '+'
-                )}&type=all`"
-                target="_blank"
-                v-if="error.artist"
-                >(manual search)
-              </a>
-            </div>
-          </div>
-        </div>
+    <div class="row justify-content-md-center mb-5">
+      <div class="col-md-auto">
+        <button
+          class="btn btn-sm btn-success"
+          type="button"
+          @click="downloadCSV"
+          :disabled="computedFiltered.length < 1"
+        >
+          Download Results
+        </button>
       </div>
-    </transition>
-
-    <transition name="upload">
-      <div v-if="computedFiltered.length > 0" class="row mb-5">
-        <div class="col">
-          <button class="btn btn-success" type="button" @click="downloadCSV">
-            Download Results
-          </button>
-        </div>
-        <div class="col">
-          <button class="btn btn-danger" type="button" @click="clearResults">
-            Clear Results
-          </button>
-        </div>
-        <div class="col">
-          <div class="input-group">
-            <span class="input-group-text">Custom Search URL</span>
-            <input
-              type="text"
-              v-model="customSearchUrl"
-              class="form-control"
-              placeholder=""
-            />
-          </div>
-        </div>
+      <div class="col-md-auto">
+        <button
+          class="btn btn-sm btn-danger"
+          type="button"
+          @click="clearResults"
+          :disabled="computedFiltered.length < 1"
+        >
+          Clear Results
+        </button>
       </div>
-    </transition>
-    <div class="row mb-5" v-if="downloadComplete && downloadStarted">
-      <div class="col">
-        <form @submit.prevent="discogsQuery(query.toLowerCase())">
-          <div class="input-group">
-            <span class="input-group-text">Individual Artist Search</span>
-            <input
-              type="text"
-              v-model="query"
-              class="form-control"
-              id="queryinput"
-              placeholder=""
-            />
-            <button class="btn btn-outline-primary" type="submit">
-              Search!
-            </button>
-          </div>
+      <div class="col-md-auto">
+        <form>
+          <label
+            for="previousSearchUpload"
+            class="btn btn-sm btn-outline-secondary"
+          >
+            Upload Results From Previous Search
+          </label>
+          <input
+            type="file"
+            class="d-none input-group"
+            @change="previousSearchUpload($event)"
+            accept=".csv"
+            id="previousSearchUpload"
+          />
         </form>
+      </div>
+      <div class="col-md-auto">
+        <div class="input-group-sm input-group">
+          <span class="input-group-text">Custom Search URL</span>
+          <input
+            type="text"
+            v-model="customSearchUrl"
+            class="form-control"
+            placeholder=""
+          />
+        </div>
       </div>
     </div>
 
@@ -376,7 +355,7 @@
 }
 
 .loggybox {
-  height: 300px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
@@ -465,7 +444,7 @@ export default {
       downloadComplete: false,
       displayAlbums: true,
       displayCollected: true,
-      displayLogs: false,
+      displayLogs: true,
       readyToDownloadInfo: false,
       queryCount: 0,
       filteredYear: 1900,
@@ -507,7 +486,6 @@ export default {
 
             complete: function (results) {
               this.uploadedAlbums = results.data;
-              this.readyToDownloadInfo = true;
             }.bind(this),
           });
         }
