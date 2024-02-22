@@ -8,7 +8,7 @@
             Upload Your Collection
             <button
               type="button"
-              class="btn btn-sm btn-light"
+              class="btn btn-sm btn-light rounded-circle pt-0 pb-0 ps-2 pe-2"
               data-bs-toggle="modal"
               data-bs-target="#faqmodal"
             >
@@ -109,7 +109,7 @@
                   for="previousSearchUpload"
                   class="btn btn-sm btn-outline-secondary m-2"
                 >
-                  Upload Results From Previous Search
+                  Upload Results
                 </label>
                 <input
                   type="file"
@@ -329,9 +329,42 @@
           <div class="modal-body">
             <p>
               You will need to upload a .csv file with the columns
-              <strong>Artist</strong> and <strong>Album</strong>. You don't have
-              to use a header but you can if you want to.
+              <strong>Artist</strong> and <strong>Album</strong>
             </p>
+            <table
+              class="table table-sm table-bordered table-responsive caption-top"
+            >
+              <caption>
+                Example
+              </caption>
+              <thead>
+                <th scope="col">Artist</th>
+                <th scope="col">Album</th>
+                <th scope="col" style="width: 4em"></th>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Interpol</td>
+                  <td>Turn on the Bright Lights</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Have A Nice Life</td>
+                  <td>Deathconsciousness</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Bruce Springsteen</td>
+                  <td>Nebraska</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>&nbsp;</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
             <p>
               If you are using MusicBee (you should) and you have a large
               collection, you can use several tools. First is the
@@ -340,22 +373,14 @@
                 target="_blank"
                 >Additional Tagging & Reporting Tools Plugin</a
               >. By using the Library Report feature, you can easily export a
-              .csv of all the artists and all the albums you have. If you want
-              to narrow this down to only artists that you actually listen to,
-              you can use the custom display fields to show many plays the
-              artist has. Use the formula
+              .csv of all the artists and all the albums you have.
+              <br />
+              If you want to narrow this down to only artists that you actually
+              listen to, you can use the custom display fields to show many
+              plays the artist has. Use the formula
               <span class="font-monospace">{{ musicBeeFormula }}</span> to see
               how many plays per artist you have.
             </p>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>
