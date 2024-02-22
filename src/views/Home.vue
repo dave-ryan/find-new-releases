@@ -214,7 +214,17 @@
           </div>
           <div class="col-md-auto">
             <div class="input-group-sm input-group">
-              <span class="input-group-text">Custom Search URL</span>
+              <span class="input-group-text"
+                >Custom Search URL
+                <button
+                  type="button"
+                  class="btn btn-sm btn-light rounded-circle pt-0 pb-0 ps-2 pe-2 ms-2"
+                  @click="displayExamples = !displayExamples"
+                >
+                  {{ displayExamples ? "x" : "?" }}
+                </button></span
+              >
+
               <input
                 type="text"
                 v-model="customSearchUrl"
@@ -222,6 +232,19 @@
                 placeholder=""
               />
             </div>
+            <transition name="fade">
+              <ul
+                class="list-group position-absolute shadow-lg"
+                v-if="displayExamples"
+              >
+                <li class="list-group-item disabled">Examples</li>
+                <li class="list-group-item">
+                  youtube.com/results?search_query=
+                </li>
+                <li class="list-group-item">open.spotify.com/search/</li>
+                <li class="list-group-item">www.google.com/search?q=</li>
+              </ul>
+            </transition>
           </div>
         </div>
       </div>
@@ -475,6 +498,7 @@ export default {
       downloading: false,
       displayAlbums: true,
       displayCollected: true,
+      displayExamples: false,
       displayLogs: true,
       engineRunning: false,
       errors: [],
