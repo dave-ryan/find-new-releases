@@ -45,6 +45,21 @@
           </form>
         </div>
 
+        <transition name="fade">
+          <div v-if="progress > 0" class="progress m-2">
+            <div
+              class="progress-bar"
+              role="progressbar"
+              :style="`width: ${progress}%`"
+              :aria-valuenow="progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              {{ progress }}%
+            </div>
+          </div>
+        </transition>
+
         <div class="mb-5">
           <transition name="right">
             <div v-if="displayLogs" class="row mb-3">
@@ -507,6 +522,7 @@ export default {
       logs: [],
       logsDiv: null,
       musicBeeFormula: "$Sum(<play count>, <album artist>)",
+      progress: 0,
       queryCount: 0,
       readyToDownloadInfo: false,
       searchInput: "",
@@ -608,6 +624,9 @@ export default {
       if (this.queryCount < this.uploadedAlbums.length) {
         this.discogsQuery(this.uploadedAlbums[this.queryCount][0]);
         this.queryCount += 1;
+        this.progress = Math.round(
+          (100 * this.queryCount) / this.uploadedAlbums.length
+        );
       } else {
         this.engineRunning = false;
         this.logs.push("Download Complete!");
@@ -764,6 +783,7 @@ export default {
         this.readyToDownloadInfo = false;
         this.searchInput = "";
         this.uploadedFileName = "";
+        this.progress = 0;
       }
     },
   },
