@@ -21,7 +21,7 @@
         <div class="mb-5">
           <form>
             <label for="csvUpload" class="btn btn-lg btn-outline-primary">
-              Upload MusicBee CSV
+              Upload CSV
             </label>
             <input
               type="file"
@@ -147,7 +147,7 @@
             <form @submit.prevent="discogsQuery(searchInput.toLowerCase())">
               <fieldset :disabled="engineRunning || downloading">
                 <div class="input-group">
-                  <span class="input-group-text">Individual Artist Search</span>
+                  <span class="input-group-text">Artist Search</span>
                   <input
                     type="text"
                     v-model="searchInput"
@@ -249,7 +249,7 @@
             </div>
             <transition name="fade">
               <ul
-                class="list-group position-absolute shadow-lg"
+                class="list-group position-absolute shadow-lg popover"
                 v-if="displayExamples"
               >
                 <li class="list-group-item disabled">Examples</li>
@@ -267,8 +267,17 @@
 
     <!-- Albums -->
     <transition name="upload">
-      <div class="row" v-if="computedFiltered.length > 0">
+      <div
+        class="row position-relative"
+        :class="engineRunning || downloading ? 'loadingrow' : 'loadedrow'"
+        v-if="computedFiltered.length > 0"
+      >
         <div class="col-12">
+          <transition name="fade">
+            <div id="spinner-wrapper" v-if="engineRunning || downloading">
+              <div id="spinner"></div>
+            </div>
+          </transition>
           <table class="table">
             <thead>
               <tr>
@@ -345,6 +354,7 @@
         </div>
       </div>
     </transition>
+
     <!-- FAQ Modal -->
     <div
       class="modal fade"
@@ -442,6 +452,109 @@
   max-height: 300px;
   overflow-y: auto;
 }
+
+.loadingrow {
+  height: 30rem;
+  overflow-y: hidden;
+}
+
+.loadedrow {
+  height: 50rem;
+  overflow-y: auto;
+}
+
+#spinner-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  background-color: rgb(255, 255, 255);
+  --mask: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 1) 0,
+      rgba(0, 0, 0, 1) 40%,
+      rgba(0, 0, 0, 0) 100%,
+      rgba(0, 0, 0, 0) 0
+    )
+    100% 50% / 100% 100% repeat-x;
+
+  -webkit-mask: var(--mask);
+  mask: var(--mask);
+}
+#spinner {
+  display: block;
+  position: relative;
+  left: 50%;
+  top: 150px;
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #0d6efd;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+#spinner:before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #198754;
+  -webkit-animation: spin 3s linear infinite;
+  animation: spin 3s linear infinite;
+}
+
+#spinner:after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  bottom: 15px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #dc3545;
+  -webkit-animation: spin 1.5s linear infinite;
+  animation: spin 1.5s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    -ms-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+.popover {
+  z-index: 1070;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: all 0.7s ease-out;
