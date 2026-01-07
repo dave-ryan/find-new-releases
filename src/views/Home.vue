@@ -78,7 +78,8 @@
                 <div class="border-bottom border-dark">Errors:</div>
                 <div class="loggybox p-0" id="errors-div">
                   <div v-for="(error, index) in errors" :key="index">
-                    {{ error.message }} -
+                    {{ error.message }}
+                    <span v-if="error.artist"> - </span>
                     <a
                       :href="`https://www.discogs.com/search/?q=${error.artist.replace(
                         /\s/g,
@@ -671,11 +672,9 @@ export default {
     musicCollectionUpload(e) {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0],
-          fileSize = Math.round((file.size / 1024 / 1024) * 100) / 100,
           fileExtention = file.name.split(".").pop(),
           fileName = file.name.split(".").shift();
         this.uploadedFileName = fileName + "." + fileExtention;
-        console.log(fileSize, fileExtention, fileName);
 
         if (fileExtention === "csv") {
           Papa.parse(file, {
@@ -691,11 +690,9 @@ export default {
     previousSearchUpload(e) {
       if (e.target.files && e.target.files[0]) {
         const file = e.target.files[0],
-          fileSize = Math.round((file.size / 1024 / 1024) * 100) / 100,
           fileExtention = file.name.split(".").pop(),
           fileName = file.name.split(".").shift();
         this.uploadedFileName = fileName + "." + fileExtention;
-        console.log(fileSize, fileExtention, fileName);
 
         if (fileExtention === "csv") {
           Papa.parse(file, {
@@ -747,8 +744,6 @@ export default {
           this.scrolly(this.logsDiv);
           this.scrolly(this.errorsDiv);
         }
-        console.log("Uploaded Albums:", this.uploadedAlbums);
-        console.log("Downloaded Albums:", this.downloadedArtists);
       }
     },
     scrolly(div) {
@@ -849,14 +844,15 @@ export default {
           })
           .catch((errors) => {
             this.downloading = false;
-            this.errors.push(`ERROR! ${errors}`);
+            this.errors.push({
+              message: `ERROR! ${errors}`,
+            });
             if (this.errors.length > 5) {
               this.scrolly(this.errorsDiv);
             }
           });
       } else {
-        this.errors.push(`Already downloaded info on '${artist}'`);
-        // small hiccup before next query
+        // already searched
         self = this;
         setTimeout(function () {
           self.downloadEngine();
@@ -866,7 +862,6 @@ export default {
     downloadCSV() {
       var csv = [];
       this.computedFiltered.forEach((artist) => {
-        console.log("?", artist);
         artist.forEach((album) => {
           let row = {
             artist: this.snippedArtist(album.title),
