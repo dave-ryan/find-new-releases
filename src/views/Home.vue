@@ -770,7 +770,7 @@ export default {
           var self = this;
           setTimeout(function () {
             self.downloadEngine();
-          }, 1000);
+          }, 1300);
         }
 
         this.downloading = true;
